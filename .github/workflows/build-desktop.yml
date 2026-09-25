@@ -60,6 +60,8 @@ jobs:
         run: |
           go env -w GOPROXY=https://goproxy.cn,direct
           go env -w GOTOOLCHAIN=local
+          go env -w GOSUMDB=off
+          go env -w GOFLAGS=-mod=mod
 
       - name: Clean Go module cache
         shell: bash
