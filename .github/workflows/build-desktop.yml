@@ -54,6 +54,18 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
+      # ---- Go 代理：避免 proxy.golang.org 超时和校验失败 ----
+      - name: Configure Go proxy
+        shell: bash
+        run: |
+          go env -w GOPROXY=https://goproxy.cn,direct
+          go env -w GOSUMDB=off
+          go env -w GOFLAGS=-mod=mod
+
+      - name: Clean Go module cache
+        shell: bash
+        run: go clean -modcache
+
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -62,6 +74,29 @@ jobs:
 
       - name: Install Wails CLI
         run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+      # ---- Windows: 安装 MSYS2 MinGW-w64 工具链 ----
+      - name: Setup MSYS2 (Windows)
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-gcc-libs
+            mingw-w64-x86_64-pkg-config
+            mingw-w64-x86_64-sqlite3
+
+      - name: Set Windows CGO environment
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          echo "C:\msys64\mingw64\bin" >> $GITHUB_PATH
+          echo "CC=x86_64-w64-mingw32-gcc" >> $GITHUB_ENV
+          echo "CXX=x86_64-w64-mingw32-g++" >> $GITHUB_ENV
+          echo "CGO_ENABLED=1" >> $GITHUB_ENV
+          echo "CGO_LDFLAGS=-static -lwinpthread" >> $GITHUB_ENV
 
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
@@ -89,7 +124,7 @@ jobs:
         shell: bash
         run: |
           export GOLANG_PROTOBUF_REGISTRATION_CONFLICT=warn
-          export CGO_CFLAGS="-Wno-deprecated-declarations"
+          export CGO_CFLAGS="-Wno-deprecated-declarations -IC:/msys64/mingw64/include"
           cd cmd/desktop
           go build -p 1 -buildvcs=false -tags "desktop,sqlite_fts5,production" -o _prebuild_tmp.exe . || true
           rm -f _prebuild_tmp.exe
@@ -114,6 +149,7 @@ jobs:
           fi
           if [ "${{ runner.os }}" = "Windows" ]; then
             NSIS_FLAG="-nsis"
+            export CGO_CFLAGS="-Wno-deprecated-declarations -IC:/msys64/mingw64/include"
           fi
 
           bash ./scripts/check-license-bundle.sh
@@ -183,7 +219,7 @@ jobs:
           tar czf "${ARCHIVE}.tar.gz" "${ARCHIVE}"
           shasum -a 256 "${ARCHIVE}.tar.gz" > "${ARCHIVE}.tar.gz.sha256"
 
-      # ── Windows: NSIS installer includes licenses and corresponding source ──
+      # ── Windows: NSIS installer ──
       - name: Package Windows app
         if: runner.os == 'Windows'
         shell: bash
