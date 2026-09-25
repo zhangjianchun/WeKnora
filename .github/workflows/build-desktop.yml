@@ -55,14 +55,16 @@ jobs:
           cache: true
           cache-dependency-path: go.sum
 
-      # ---- Go 环境：使用国内代理，sumdb 走国内镜像，保留校验 ----
+      # ---- Go 环境：多镜像回退，sumdb 走国内镜像，保留校验 ----
       - name: Configure Go environment
         shell: bash
         run: |
-          go env -w GOPROXY=https://goproxy.cn,direct
+          go env -w GOPROXY="https://goproxy.cn,https://goproxy.io,https://mirrors.aliyun.com/goproxy/,direct"
           go env -w GOTOOLCHAIN=local
           go env -w GOSUMDB=sum.golang.google.cn
           go env -w GOFLAGS=-mod=mod
+          # 部分代理对 HTTP/2 长连接处理不稳定，回退到 HTTP/1.1
+          echo "GODEBUG=http2client=0" >> "$GITHUB_ENV"
 
       - name: Clean Go module cache
         shell: bash
@@ -71,7 +73,17 @@ jobs:
       # 以仓库提交的 go.sum 为准做下载校验，提前暴露损坏的模块缓存
       - name: Download & verify modules
         shell: bash
-        run: go mod download all
+        run: |
+          for i in 1 2 3 4 5; do
+            if go mod download; then
+              echo "modules downloaded successfully"
+              exit 0
+            fi
+            echo "go mod download failed, retrying ($i/5)..."
+            sleep 15
+          done
+          echo "go mod download failed after 5 attempts"
+          exit 1
 
       - uses: actions/setup-node@v4
         with:
