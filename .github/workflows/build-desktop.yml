@@ -97,6 +97,40 @@ jobs:
           echo "CGO_ENABLED=1" >> $GITHUB_ENV
           echo "CGO_LDFLAGS=-static -lwinpthread" >> $GITHUB_ENV
 
+      # ---- 关键修复：把 sqlite3.h 复制到 sqlite-vec.h 同目录 ----
+      - name: Setup sqlite3.h for CGO
+        shell: bash
+        run: |
+          echo "=== Locating sqlite3.h in MSYS2 ==="
+          SQLITE3_H=$(find /c/msys64/mingw64/include -name "sqlite3.h" 2>/dev/null | head -1)
+          if [ -z "$SQLITE3_H" ]; then
+            echo "Not found in mingw64/include, searching whole MSYS2..."
+            SQLITE3_H=$(find /c/msys64 -name "sqlite3.h" 2>/dev/null | head -1)
+          fi
+          if [ -z "$SQLITE3_H" ]; then
+            echo "ERROR: sqlite3.h not found anywhere in MSYS2"
+            exit 1
+          fi
+          echo "Found sqlite3.h at: $SQLITE3_H"
+
+          echo "=== Locating sqlite-vec cgo directory ==="
+          GOPATH=$(go env GOPATH)
+          echo "GOPATH: $GOPATH"
+          VEC_H=$(find "$GOPATH/pkg/mod/github.com/asg017" -name "sqlite-vec.h" 2>/dev/null | head -1)
+          if [ -z "$VEC_H" ]; then
+            echo "ERROR: sqlite-vec.h not found"
+            echo "Listing asg017 module dirs:"
+            find "$GOPATH/pkg/mod/github.com" -maxdepth 2 -name "*sqlite-vec*" 2>/dev/null
+            exit 1
+          fi
+          VEC_CGO=$(dirname "$VEC_H")
+          echo "Found sqlite-vec cgo dir at: $VEC_CGO"
+
+          echo "=== Copying sqlite3.h into cgo dir ==="
+          cp "$SQLITE3_H" "$VEC_CGO/sqlite3.h"
+          echo "=== After copy ==="
+          ls -la "$VEC_CGO/"
+
       - name: Install NSIS
         run: choco install nsis -y
 
