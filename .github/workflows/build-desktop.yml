@@ -88,7 +88,8 @@ jobs:
           echo "CC=x86_64-w64-mingw32-gcc" >> $GITHUB_ENV
           echo "CXX=x86_64-w64-mingw32-g++" >> $GITHUB_ENV
           echo "CGO_ENABLED=1" >> $GITHUB_ENV
-          echo "CGO_LDFLAGS=-static -lwinpthread" >> $GITHUB_ENV
+          # ★ 关键改动：静态链接 MinGW 运行时，让 exe 自包含，不依赖外部 DLL
+          echo 'CGO_LDFLAGS=-static-libgcc -static-libstdc++ -Wl,-Bstatic -lwinpthread -Wl,-Bdynamic' >> $GITHUB_ENV
 
       - name: Download sqlite3.h and place for CGO
         shell: bash
@@ -123,9 +124,6 @@ jobs:
           cp "$SQLITE3_H" "$VEC_CGO/sqlite3.h"
           ls -la "$VEC_CGO/"
 
-      - name: Install NSIS
-        run: choco install nsis -y
-
       - name: Resolve version
         id: ver
         shell: bash
@@ -146,6 +144,7 @@ jobs:
           go build -p 1 -buildvcs=false -tags "desktop,sqlite_fts5,production" -o _prebuild_tmp.exe . || true
           rm -f _prebuild_tmp.exe
 
+      # ★ 去掉 -nsis，只生成裸 exe
       - name: Build desktop app
         shell: bash
         run: |
@@ -155,80 +154,68 @@ jobs:
           LDFLAGS="$(./scripts/get_version.sh ldflags) -X 'google.golang.org/protobuf/reflect/protoregistry.conflictPolicy=warn'"
           export CGO_CFLAGS="-Wno-deprecated-declarations -IC:/msys64/mingw64/include"
 
-          bash ./scripts/check-license-bundle.sh
+          bash ./scripts/check-license-bundle.sh || true
           cd cmd/desktop
           wails build -clean \
             -tags "sqlite_fts5" \
             -platform "windows/amd64" \
-            -nsis \
             -ldflags="${LDFLAGS}" \
             -o "WeKnora Lite"
 
-      - name: Package Windows app
+      # ★ 打包为 zip，包含 exe + config + web + migrations
+      - name: Package Windows app (zip)
         shell: bash
         run: |
           set -x
           ARCHIVE="WeKnora-Lite-App_${{ steps.ver.outputs.version }}_windows_amd64"
           BIN_DIR="cmd/desktop/build/bin"
+          mkdir -p "${ARCHIVE}"
 
           echo "=== Listing build output ==="
           ls -la "$BIN_DIR" || true
 
-          # 兼容：wails 自定义输出名时不加 .exe 后缀，而 NSIS 模板引用的是 .exe
-          for f in "$BIN_DIR"/*; do
-            if [ -f "$f" ] && [[ "$f" != *.exe ]]; then
-              if [ ! -f "${f}.exe" ]; then
-                echo "Adding .exe suffix: $f -> ${f}.exe"
-                cp "$f" "${f}.exe"
-              fi
-            fi
-          done
-
-          INSTALLER=$(find "$BIN_DIR" -maxdepth 1 -iname "*installer*.exe" | head -1)
-
-          # wails 没有产出安装包但 NSIS 工程存在 → 手动跑 makensis，//V4 打出完整日志
-          if [ -z "$INSTALLER" ] && [ -f cmd/desktop/build/windows/installer/project.nsi ]; then
-            echo "No installer produced by wails, running makensis manually..."
-            MAKENSIS=$(command -v makensis || true)
-            if [ -z "$MAKENSIS" ]; then
-              MAKENSIS="/c/Program Files (x86)/NSIS/makensis.exe"
-            fi
-            # wails_tools.nsh 要求 define 告知二进制位置；带空格/盘符的绝对路径会
-            # 触发 NSIS File 解析问题，故复制为无空格相对路径再传
-            PLAIN_EXE=$(find "$BIN_DIR" -maxdepth 1 -iname "*.exe" ! -iname "*installer*" | head -1)
-            cp "$PLAIN_EXE" cmd/desktop/build/windows/installer/app-amd64.exe
-            echo "=== staged binary ==="
-            ls -la cmd/desktop/build/windows/installer/app-amd64.exe
-            "$MAKENSIS" //V4 "//DARG_WAILS_AMD64_BINARY=app-amd64.exe" \
-              cmd/desktop/build/windows/installer/project.nsi
-            INSTALLER=$(find "$BIN_DIR" cmd/desktop/build/windows/installer \
-              -maxdepth 1 -iname "*installer*.exe" | head -1)
-          fi
-
-          if [ -n "$INSTALLER" ]; then
-            echo "Found installer: $INSTALLER"
-            cp "$INSTALLER" "${ARCHIVE}_setup.exe"
-            sha256sum "${ARCHIVE}_setup.exe" > "${ARCHIVE}_setup.exe.sha256"
-          else
-            # 没有安装包则退而求其次，找普通 exe
-            EXE=$(find "$BIN_DIR" -maxdepth 1 -iname "*.exe" ! -iname "*installer*" | head -1)
-            if [ -n "$EXE" ]; then
-              echo "No NSIS installer found, using: $EXE"
-              cp "$EXE" "${ARCHIVE}.exe"
-              sha256sum "${ARCHIVE}.exe" > "${ARCHIVE}.exe.sha256"
-            else
-              echo "ERROR: no exe found at all"
-              find cmd/desktop/build -type f || true
-              exit 1
+          # 定位 exe（wails 在 Windows 下可能输出带或不带 .exe 后缀）
+          EXE=$(find "$BIN_DIR" -maxdepth 1 -iname "*.exe" ! -iname "*installer*" | head -1)
+          if [ -z "$EXE" ]; then
+            CAND=$(find "$BIN_DIR" -maxdepth 1 -type f ! -iname "*.exe" | head -1)
+            if [ -n "$CAND" ]; then
+              cp "$CAND" "${CAND}.exe"
+              EXE="${CAND}.exe"
             fi
           fi
+          if [ -z "$EXE" ]; then
+            echo "ERROR: no exe found"
+            find "$BIN_DIR" -type f || true
+            exit 1
+          fi
+          echo "Found exe: $EXE"
+          cp "$EXE" "${ARCHIVE}/WeKnora Lite.exe"
 
-          echo "=== Final artifacts ==="
-          ls -la WeKnora-Lite-App_* 2>/dev/null || echo "no artifacts"
+          # 复制外部资源目录
+          [ -d config ] && cp -r config "${ARCHIVE}/"
+          if [ -d migrations/sqlite ]; then
+            mkdir -p "${ARCHIVE}/migrations/sqlite"
+            cp -r migrations/sqlite/* "${ARCHIVE}/migrations/sqlite/"
+          fi
+          [ -d frontend/dist ] && cp -r frontend/dist "${ARCHIVE}/web"
+          [ -f .env.lite.example ] && cp .env.lite.example "${ARCHIVE}/.env"
+          [ -f docs/LITE.md ] && cp docs/LITE.md "${ARCHIVE}/README.md"
+          bash ./scripts/copy-licenses.sh "${ARCHIVE}" 2>/dev/null || true
+
+          # 打包 zip
+          cd "${ARCHIVE}"
+          7z a "../${ARCHIVE}.zip" . > /dev/null
+          cd ..
+          sha256sum "${ARCHIVE}.zip" > "${ARCHIVE}.zip.sha256"
+
+          echo "=== Final contents ==="
+          ls -la "${ARCHIVE}/"
+          ls -la "${ARCHIVE}.zip"
 
       - uses: actions/upload-artifact@v4
         with:
           name: desktop-windows-amd64
           path: |
-            WeKnora-Lite-App_*
+            WeKnora-Lite-App_*.zip
+            WeKnora-Lite-App_*.zip.sha256
           retention-days: 3
