@@ -167,13 +167,35 @@ jobs:
       - name: Package Windows app
         shell: bash
         run: |
+          set -x
           ARCHIVE="WeKnora-Lite-App_${{ steps.ver.outputs.version }}_windows_amd64"
+          BIN_DIR="cmd/desktop/build/bin"
 
           echo "=== Listing build output ==="
-          ls -la "cmd/desktop/build/bin/" || true
+          ls -la "$BIN_DIR" || true
 
-          # Wails 生成的 NSIS 安装包文件名随版本/配置变化，自动查找
-          INSTALLER=$(find cmd/desktop/build/bin -maxdepth 1 -iname "*installer*.exe" | head -1)
+          # 兼容：wails 自定义输出名时不加 .exe 后缀，而 NSIS 模板引用的是 .exe
+          for f in "$BIN_DIR"/*; do
+            if [ -f "$f" ] && [[ "$f" != *.exe ]]; then
+              if [ ! -f "${f}.exe" ]; then
+                echo "Adding .exe suffix: $f -> ${f}.exe"
+                cp "$f" "${f}.exe"
+              fi
+            fi
+          done
+
+          INSTALLER=$(find "$BIN_DIR" -maxdepth 1 -iname "*installer*.exe" | head -1)
+
+          # wails 没有产出安装包但 NSIS 工程存在 → 手动跑 makensis，//V4 打出完整日志
+          if [ -z "$INSTALLER" ] && [ -f cmd/desktop/build/windows/installer/project.nsi ]; then
+            echo "No installer produced by wails, running makensis manually..."
+            MAKENSIS=$(command -v makensis || true)
+            if [ -z "$MAKENSIS" ]; then
+              MAKENSIS="/c/Program Files (x86)/NSIS/makensis.exe"
+            fi
+            "$MAKENSIS" //V4 cmd/desktop/build/windows/installer/project.nsi
+            INSTALLER=$(find "$BIN_DIR" -maxdepth 1 -iname "*installer*.exe" | head -1)
+          fi
 
           if [ -n "$INSTALLER" ]; then
             echo "Found installer: $INSTALLER"
@@ -181,7 +203,7 @@ jobs:
             sha256sum "${ARCHIVE}_setup.exe" > "${ARCHIVE}_setup.exe.sha256"
           else
             # 没有安装包则退而求其次，找普通 exe
-            EXE=$(find cmd/desktop/build/bin -maxdepth 1 -iname "*.exe" ! -iname "*installer*" | head -1)
+            EXE=$(find "$BIN_DIR" -maxdepth 1 -iname "*.exe" ! -iname "*installer*" | head -1)
             if [ -n "$EXE" ]; then
               echo "No NSIS installer found, using: $EXE"
               cp "$EXE" "${ARCHIVE}.exe"
