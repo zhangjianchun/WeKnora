@@ -25,8 +25,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Git for Windows 默认按 CRLF 检出文本文件，modules.tsv 的校验和列会带上 \r，
-      # 导致 check-license-bundle.sh 报 "Invalid source checksum"
       - name: Normalize line endings (modules.tsv)
         shell: bash
         run: sed -i 's/\r$//' licenses/sources/modules.tsv
@@ -37,7 +35,6 @@ jobs:
           cache: true
           cache-dependency-path: go.sum
 
-      # ---- Go 环境：多镜像回退，sumdb 走国内镜像，保留校验 ----
       - name: Configure Go environment
         shell: bash
         run: |
@@ -45,14 +42,12 @@ jobs:
           go env -w GOTOOLCHAIN=local
           go env -w GOSUMDB=sum.golang.google.cn
           go env -w GOFLAGS=-mod=mod
-          # 部分代理对 HTTP/2 长连接处理不稳定，回退到 HTTP/1.1
           echo "GODEBUG=http2client=0" >> "$GITHUB_ENV"
 
       - name: Clean Go module cache
         shell: bash
         run: go clean -modcache
 
-      # 以仓库提交的 go.sum 为准做下载校验，多镜像回退 + 重试
       - name: Download & verify modules
         shell: bash
         run: |
@@ -76,17 +71,15 @@ jobs:
       - name: Install Wails CLI
         run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
-      # ---- Windows: 安装 MSYS2 MinGW-w64 工具链 ----
       - name: Setup MSYS2
         uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
-          update: true
+          update: false
           install: >-
             mingw-w64-x86_64-gcc
             mingw-w64-x86_64-gcc-libs
             mingw-w64-x86_64-pkg-config
-            mingw-w64-x86_64-sqlite3
 
       - name: Set Windows CGO environment
         shell: bash
@@ -96,6 +89,39 @@ jobs:
           echo "CXX=x86_64-w64-mingw32-g++" >> $GITHUB_ENV
           echo "CGO_ENABLED=1" >> $GITHUB_ENV
           echo "CGO_LDFLAGS=-static -lwinpthread" >> $GITHUB_ENV
+
+      - name: Download sqlite3.h and place for CGO
+        shell: bash
+        run: |
+          echo "=== Locating sqlite-vec cgo directory ==="
+          GOPATH=$(go env GOPATH)
+          echo "GOPATH: $GOPATH"
+          VEC_H=$(find "$GOPATH/pkg/mod/github.com/asg017" -name "sqlite-vec.h" 2>/dev/null | head -1)
+          if [ -z "$VEC_H" ]; then
+            echo "ERROR: sqlite-vec.h not found"
+            find "$GOPATH/pkg/mod/github.com" -maxdepth 2 -name "*sqlite-vec*" 2>/dev/null
+            exit 1
+          fi
+          VEC_CGO=$(dirname "$VEC_H")
+          echo "Found sqlite-vec cgo dir at: $VEC_CGO"
+
+          echo "=== Downloading sqlite amalgamation ==="
+          mkdir -p /tmp/sqlite
+          cd /tmp/sqlite
+          curl -kL -o sqlite.zip https://www.sqlite.org/2025/sqlite-amalgamation-3500300.zip
+          ls -la sqlite.zip
+          unzip -o sqlite.zip
+          SQLITE3_H=$(find /tmp/sqlite -name "sqlite3.h" | head -1)
+          if [ -z "$SQLITE3_H" ]; then
+            echo "ERROR: sqlite3.h not found after unzip"
+            find /tmp/sqlite -type f
+            exit 1
+          fi
+          echo "Found sqlite3.h at: $SQLITE3_H"
+
+          echo "=== Copying into cgo dir ==="
+          cp "$SQLITE3_H" "$VEC_CGO/sqlite3.h"
+          ls -la "$VEC_CGO/"
 
       - name: Install NSIS
         run: choco install nsis -y
@@ -142,33 +168,10 @@ jobs:
         shell: bash
         run: |
           ARCHIVE="WeKnora-Lite-App_${{ steps.ver.outputs.version }}_windows_amd64"
-
-          echo "=== Listing build output ==="
-          ls -la "cmd/desktop/build/bin/" || true
-
-          # Wails 生成的 NSIS 安装包文件名随版本/配置变化，自动查找
-          INSTALLER=$(find cmd/desktop/build/bin -maxdepth 1 -iname "*installer*.exe" | head -1)
-
-          if [ -n "$INSTALLER" ]; then
-            echo "Found installer: $INSTALLER"
-            cp "$INSTALLER" "${ARCHIVE}_setup.exe"
-            sha256sum "${ARCHIVE}_setup.exe" > "${ARCHIVE}_setup.exe.sha256"
-          else
-            # 没有安装包则退而求其次，找普通 exe
-            EXE=$(find cmd/desktop/build/bin -maxdepth 1 -iname "*.exe" ! -iname "*installer*" | head -1)
-            if [ -n "$EXE" ]; then
-              echo "No NSIS installer found, using: $EXE"
-              cp "$EXE" "${ARCHIVE}.exe"
-              sha256sum "${ARCHIVE}.exe" > "${ARCHIVE}.exe.sha256"
-            else
-              echo "ERROR: no exe found at all"
-              find cmd/desktop/build -type f || true
-              exit 1
-            fi
-          fi
-
-          echo "=== Final artifacts ==="
-          ls -la WeKnora-Lite-App_* 2>/dev/null || echo "no artifacts"
+          INSTALLER="cmd/desktop/build/bin/WeKnora Lite-amd64-installer.exe"
+          test -f "$INSTALLER"
+          cp "$INSTALLER" "${ARCHIVE}_setup.exe"
+          sha256sum "${ARCHIVE}_setup.exe" > "${ARCHIVE}_setup.exe.sha256"
 
       - uses: actions/upload-artifact@v4
         with:
