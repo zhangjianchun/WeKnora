@@ -193,13 +193,16 @@ jobs:
             if [ -z "$MAKENSIS" ]; then
               MAKENSIS="/c/Program Files (x86)/NSIS/makensis.exe"
             fi
-            # wails_tools.nsh 要求通过 define 告知二进制位置，否则报 Undefined ARCH
+            # wails_tools.nsh 要求 define 告知二进制位置；带空格/盘符的绝对路径会
+            # 触发 NSIS File 解析问题，故复制为无空格相对路径再传
             PLAIN_EXE=$(find "$BIN_DIR" -maxdepth 1 -iname "*.exe" ! -iname "*installer*" | head -1)
-            BIN_WIN=$(cygpath -w "$PWD/$PLAIN_EXE")
-            echo "Binary: $BIN_WIN"
-            "$MAKENSIS" //V4 "//DARG_WAILS_AMD64_BINARY=${BIN_WIN}" \
+            cp "$PLAIN_EXE" cmd/desktop/build/windows/installer/app-amd64.exe
+            echo "=== staged binary ==="
+            ls -la cmd/desktop/build/windows/installer/app-amd64.exe
+            "$MAKENSIS" //V4 "//DARG_WAILS_AMD64_BINARY=app-amd64.exe" \
               cmd/desktop/build/windows/installer/project.nsi
-            INSTALLER=$(find "$BIN_DIR" -maxdepth 1 -iname "*installer*.exe" | head -1)
+            INSTALLER=$(find "$BIN_DIR" cmd/desktop/build/windows/installer \
+              -maxdepth 1 -iname "*installer*.exe" | head -1)
           fi
 
           if [ -n "$INSTALLER" ]; then
