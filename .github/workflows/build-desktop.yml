@@ -25,6 +25,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Git for Windows 默认按 CRLF 检出文本文件，modules.tsv 的校验和列会带上 \r，
+      # 导致 check-license-bundle.sh 报 "Invalid source checksum"
+      - name: Normalize line endings (modules.tsv)
+        shell: bash
+        run: sed -i 's/\r$//' licenses/sources/modules.tsv
+
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
