@@ -41,7 +41,7 @@
           <span class="lang-flag-icon">{{ currentLangOption?.flag }}</span>
           <span class="link-text">{{ currentLangOption?.shortLabel }}</span>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            stroke-linecap="round">
+               stroke-linecap="round">
             <polyline points="6 9 12 15 18 9" />
           </svg>
         </button>
@@ -49,7 +49,7 @@
         <!-- Language Dropdown -->
         <div v-if="showLanguageMenu" class="language-dropdown">
           <div v-for="lang in languageOptions" :key="lang.value" @click="selectLanguage(lang.value)"
-            class="language-option" :class="{ active: currentLanguage === lang.value }">
+               class="language-option" :class="{ active: currentLanguage === lang.value }">
             <span class="lang-flag">{{ lang.flag }}</span>
             <span class="lang-label">{{ lang.label }}</span>
             <span v-if="currentLanguage === lang.value" class="check-icon">✓</span>
@@ -77,7 +77,7 @@
             delay: 4000,
             disableOnInteraction: false,
           }" :effect="'fade'" :fade-effect="{ crossFade: true }"
-            :pagination="{ clickable: true, dynamicBullets: false }" :speed="800" class="screenshot-swiper">
+                  :pagination="{ clickable: true, dynamicBullets: false }" :speed="800" class="screenshot-swiper">
             <swiper-slide v-for="(slide, index) in slides" :key="index">
               <div class="slide-content">
                 <img :src="slide.image" :alt="slide.title" class="slide-image" />
@@ -116,15 +116,15 @@
 
           <div class="form-content">
             <t-form ref="formRef" :data="formData" :rules="formRules" @submit="handleLogin" layout="vertical"
-              label-align="top">
+                    label-align="top">
               <t-form-item :label="$t('auth.email')" name="email">
                 <t-input v-model="formData.email" :placeholder="$t('auth.emailPlaceholder')" type="text"
-                  autocomplete="email" size="large" :disabled="loading" />
+                         autocomplete="email" size="large" :disabled="loading" />
               </t-form-item>
 
               <t-form-item :label="$t('auth.password')" name="password">
                 <t-input v-model="formData.password" :placeholder="$t('auth.passwordPlaceholder')" type="password"
-                  autocomplete="current-password" size="large" :disabled="loading" @enter="handleLogin" />
+                         autocomplete="current-password" size="large" :disabled="loading" @enter="handleLogin" />
               </t-form-item>
 
               <t-button type="submit" theme="primary" size="large" block :loading="loading" class="submit-button">
@@ -136,7 +136,7 @@
                   <span>{{ $t('auth.firstTime') }}</span>
                 </div>
                 <t-button theme="default" variant="outline" size="large" block class="register-cta__button"
-                  :disabled="loading" @click="toggleMode">
+                          :disabled="loading" @click="toggleMode">
                   {{ $t('auth.createAccount') }}
                 </t-button>
               </div>
@@ -146,7 +146,7 @@
               </div>
 
               <t-button v-if="oidcEnabled" theme="default" size="large" block :loading="oidcLoading" :disabled="loading"
-                class="oidc-button" @click="handleOIDCLogin">
+                        class="oidc-button" @click="handleOIDCLogin">
                 {{ oidcLoading ? $t('auth.redirectingToOIDC') : oidcLoginText }}
               </t-button>
             </t-form>
@@ -196,26 +196,26 @@
 
           <div class="form-content">
             <t-form ref="registerFormRef" :data="registerData" :rules="registerRules" @submit="handleRegister"
-              layout="vertical" label-align="top">
+                    layout="vertical" label-align="top">
               <t-form-item :label="$t('auth.username')" name="username">
                 <t-input v-model="registerData.username" :placeholder="$t('auth.usernamePlaceholder')" size="large"
-                  :disabled="loading" />
+                         :disabled="loading" />
               </t-form-item>
 
               <t-form-item :label="$t('auth.email')" name="email">
                 <t-input v-model="registerData.email" :placeholder="$t('auth.emailPlaceholder')" type="text"
-                  autocomplete="email" size="large" :disabled="loading" />
+                         autocomplete="email" size="large" :disabled="loading" />
               </t-form-item>
 
               <t-form-item :label="$t('auth.password')" name="password">
                 <t-input v-model="registerData.password" :placeholder="$t('auth.passwordPlaceholder')" type="password"
-                  autocomplete="new-password" size="large" :disabled="loading" />
+                         autocomplete="new-password" size="large" :disabled="loading" />
               </t-form-item>
 
               <t-form-item :label="$t('auth.confirmPassword')" name="confirmPassword">
                 <t-input v-model="registerData.confirmPassword" :placeholder="$t('auth.confirmPasswordPlaceholder')"
-                  type="password" autocomplete="new-password" size="large" :disabled="loading"
-                  @enter="handleRegister" />
+                         type="password" autocomplete="new-password" size="large" :disabled="loading"
+                         @enter="handleRegister" />
               </t-form-item>
 
               <t-button type="submit" theme="primary" size="large" block :loading="loading" class="submit-button">
@@ -749,7 +749,7 @@ onMounted(async () => {
   overflow: hidden;
   position: relative;
   /*background: linear-gradient(125deg, #022c22 0%, #064e3b 15%, #065f46 25%, #047857 38%, #059669 50%, #07C05F 65%, #10B981 78%, #34D399 90%, #6EE7B7 100%);*/
-background: linear-gradient(135deg, #022c22 0%, #064e3b 30%, #047857 65%, #059669 100%);
+  background: linear-gradient(135deg, #022c22 0%, #064e3b 30%, #047857 65%, #059669 100%);
   &::before {
     content: '';
     position: absolute;
@@ -758,7 +758,7 @@ background: linear-gradient(135deg, #022c22 0%, #064e3b 30%, #047857 65%, #05966
     right: 0;
     bottom: 0;
     background: radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.06) 0%, transparent 50%),
-      radial-gradient(circle at 80% 50%, rgba(255, 255, 255, 0.04) 0%, transparent 50%);
+    radial-gradient(circle at 80% 50%, rgba(255, 255, 255, 0.04) 0%, transparent 50%);
     pointer-events: none;
   }
 }

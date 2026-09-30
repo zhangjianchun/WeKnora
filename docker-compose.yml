@@ -46,7 +46,7 @@ services:
       - docreader-tmp:/tmp/docreader:ro
       - ./config/config.yaml:/app/config/config.yaml
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./config/prompt_templates:/app/config/prompt_templates:ro 
+      - ./config/prompt_templates:/app/config/prompt_templates:ro
       # Docker 沙箱默认关闭（见 WEKNORA_SANDBOX_DOCKER_ENABLED）。需要本机 daemon 时
       # 同时设 true 并挂载实际 socket——这等同宿主机 root，仅私有化单机。
       # - /var/run/docker.sock:/var/run/docker.sock
