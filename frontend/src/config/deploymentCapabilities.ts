@@ -59,7 +59,7 @@ export const SETTINGS_SECTION_CAPABILITY: Partial<Record<string, DeploymentCapab
   websearch: 'settings.websearch',
   vectorstore: 'settings.vectorstore',
   storage: 'settings.storage',
-  sandbox: 'settings.sandbox.remote',
+  sandbox: 'settings.sandbox.docker',
   // Skills are baked into a sandbox image. Hide the catalog when the
   // deployment has no sandbox support, same as personal skill credentials.
   skills: 'settings.sandbox',
