@@ -1883,6 +1883,7 @@ import { listEmbedChannels } from '@/api/embed';
 import { getRootZoom, rectToCssPx } from '@/utils/zoom';
 import { integrationSectionKey } from '@/config/settingsRoute';
 import { toolboxLocation } from '@/config/toolbox';
+import { AGENT_SECTION_FEATURE, isSectionEnabledByEdition, isFeatureEnabled } from '@/config/edition';
 import {
   evaluateToolRequirement,
   deriveKbFilterFromTools,
@@ -1959,7 +1960,12 @@ const AGENT_EDITOR_SECTION_ALIASES: Record<string, string> = {
 
 function resolveEditorSection(section?: string | null): string {
   const key = section || 'basic';
-  return AGENT_EDITOR_SECTION_ALIASES[key] || key;
+  const resolved = AGENT_EDITOR_SECTION_ALIASES[key] || key;
+  // 销售版本隐藏的受控 section 统一回落到基本信息
+  if (!isSectionEnabledByEdition(AGENT_SECTION_FEATURE, resolved)) {
+    return 'basic';
+  }
+  return resolved;
 }
 
 const currentSection = ref(resolveEditorSection(props.initialSection));
@@ -1971,7 +1977,7 @@ let highlightClearTimer: ReturnType<typeof setTimeout> | null = null;
 const VALID_HIGHLIGHT_FIELDS: AgentNotReadyReasonKey[] = ['summary_model', 'rerank_model', 'allowed_tools'];
 
 const sectionForHighlightField = (field: AgentNotReadyReasonKey): string => {
-  if (field === 'allowed_tools') return 'tools';
+  if (field === 'allowed_tools' && isFeatureEnabled('agent.tools')) return 'tools';
   return 'model';
 };
 
@@ -2759,7 +2765,7 @@ const navItems = computed(() => {
   if (editorMode.value === 'edit' && editorAgent.value?.id && !editorAgent.value?.is_builtin && !authStore.isLiteMode) {
     items.push({ key: 'share', icon: 'share', label: t('knowledgeEditor.sidebar.share') });
   }
-  return items;
+  return items.filter((it) => isSectionEnabledByEdition(AGENT_SECTION_FEATURE, it.key));
 });
 
 // 左侧导航分组（参考「头像-设置」的分组方式）
@@ -4930,7 +4936,8 @@ const handleSave = async () => {
   // 校验 VLM 模型（当图片上传启用时必填）
   if (formData.value.config.image_upload_enabled && !formData.value.config.vlm_model_id) {
     MessagePlugin.error(t('agentEditor.imageUpload.vlmModelRequired'));
-    currentSection.value = 'multimodal';
+    // 附件上传页若被当前版本隐藏，则回落到模型页
+    currentSection.value = isFeatureEnabled('agent.multimodal') ? 'multimodal' : 'model';
     return;
   }
 

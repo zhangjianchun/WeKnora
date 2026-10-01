@@ -234,6 +234,7 @@ import {
   SYSTEM_ADMIN_SETTINGS_SECTIONS,
 } from '@/config/settingsAccess'
 import { SETTINGS_SECTION_CAPABILITY, skillSettingsSupported } from '@/config/deploymentCapabilities'
+import { SETTINGS_SECTION_FEATURE, isSectionEnabledByEdition } from '@/config/edition'
 import { isToolboxSection, toolboxLocation } from '@/config/toolbox'
 import { hostSkillsOnly } from '@/utils/skillTarget'
 import {
@@ -339,6 +340,12 @@ const canSeeSection = (key: string): boolean => {
   return authStore.hasRole(min)
 }
 
+// 角色 + 部署能力 + 销售版本三重门控统一出口（导航过滤与深链守卫共用）
+const canShowSection = (key: string): boolean =>
+  canSeeSection(key)
+  && isSectionSupported(key)
+  && isSectionEnabledByEdition(SETTINGS_SECTION_FEATURE, key)
+
 const navItems = computed(() => {
   // 一律走 SETTINGS_SECTION_MIN_ROLE 表，避免 ad-hoc isAdmin/isOwner 散落在多处。
   // 服务端在每条路由上仍以 g.Viewer/Admin/Owner 为准，这里只决定 UI 是
@@ -380,7 +387,7 @@ const navItems = computed(() => {
   if (!authStore.currentTenantRole && !authStore.canAccessAllTenants) {
     return [] as NavItem[]
   }
-  return all.filter((it) => canSeeSection(it.key) && isSectionSupported(it.key))
+  return all.filter((it) => canShowSection(it.key))
 })
 
 const navGroups = computed<NavGroup[]>(() => {
@@ -507,8 +514,8 @@ watch(() => uiStore.settingsInitialSection, (section) => {
   if (section && visible.value) {
     const normalizedSection = normalizeSettingsSection(section)
     if (redirectToToolbox(normalizedSection, uiStore.settingsInitialSubSection)) return
-    if (deploymentCapabilities.loaded && !isSectionSupported(normalizedSection)) {
-      MessagePlugin.warning(t('settings.capabilityUnavailable'))
+    if (deploymentCapabilities.loaded && !canShowSection(normalizedSection)) {
+      // 静默回落：同一入口通常还会触发 URL query watcher，由它统一提示一次，避免重复弹窗
       currentSection.value = navItems.value[0]?.key || 'general'
       currentSubSection.value = ''
       return
@@ -547,7 +554,7 @@ watch(
       section,
       typeof route.query.tab === 'string' ? route.query.tab : undefined,
     )
-    if (capabilitiesLoaded && !isSectionSupported(normalizedSection)) {
+    if (capabilitiesLoaded && !canShowSection(normalizedSection)) {
       MessagePlugin.warning(t('settings.capabilityUnavailable'))
       const fallback = navItems.value[0]?.key || 'general'
       currentSection.value = fallback
@@ -585,8 +592,8 @@ const handleSettingsNav = (e: CustomEvent) => {
   if (section) {
     const normalizedSection = normalizeSettingsSection(section)
     if (redirectToToolbox(normalizedSection, subsection)) return
-    if (deploymentCapabilities.loaded && !isSectionSupported(normalizedSection)) {
-      MessagePlugin.warning(t('settings.capabilityUnavailable'))
+    if (deploymentCapabilities.loaded && !canShowSection(normalizedSection)) {
+      // 静默回落：内部上下文跳转不重复提示
       currentSection.value = navItems.value[0]?.key || 'general'
       currentSubSection.value = ''
       return

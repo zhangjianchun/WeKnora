@@ -554,6 +554,7 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import KbCreateContextualGuide from '@/components/KbCreateContextualGuide.vue'
 import { KB_EDITOR_FOCUS_SECTION_EVENT, markContextualGuideDone } from '@/config/contextualGuides'
+import { KB_SECTION_FEATURE, isSectionEnabledByEdition } from '@/config/edition'
 import { MessagePlugin, DialogPlugin } from 'tdesign-vue-next'
 import { useModalShell } from '@/composables/useModalShell'
 import SettingsModalShell from '@/components/SettingsModalShell.vue'
@@ -661,7 +662,7 @@ const currentSection = ref<string>('basic')
 
 const onKbEditorFocusSection = (event: Event) => {
   const section = (event as CustomEvent<{ section?: string }>).detail?.section
-  if (section) {
+  if (section && isSectionEnabledByEdition(KB_SECTION_FEATURE, section)) {
     currentSection.value = section
   }
 }
@@ -785,7 +786,7 @@ const navItems = computed(() => {
   if (canViewActivity.value) {
     items.push({ key: 'activity', icon: 'history', label: t('knowledgeEditor.sidebar.activity') })
   }
-  return items
+  return items.filter((it) => isSectionEnabledByEdition(KB_SECTION_FEATURE, it.key))
 })
 
 // 左侧导航分组（与 AgentEditorModal 对齐）
@@ -1809,9 +1810,10 @@ watch(() => props.visible, async (newVal) => {
     loading.value = true
     const targetKbId = props.kbId
     
-    // 检查是否有初始 section，如果有则跳转
-    if (uiStore.kbEditorInitialSection) {
-      currentSection.value = uiStore.kbEditorInitialSection
+    // 检查是否有初始 section，如果有则跳转（版本隐藏的 section 忽略）
+    const initialSection = uiStore.kbEditorInitialSection
+    if (initialSection && isSectionEnabledByEdition(KB_SECTION_FEATURE, initialSection)) {
+      currentSection.value = initialSection
     }
     
     // 加载模型列表与空间默认存储引擎（创建 KB 时即使用，不依赖是否打开「存储引擎」Tab）

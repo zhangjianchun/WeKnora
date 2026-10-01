@@ -4,6 +4,7 @@ import i18n from '@/i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useDeploymentCapabilitiesStore } from '@/stores/deploymentCapabilities'
 import type { DeploymentCapabilityKey } from '@/config/deploymentCapabilities'
+import { NAV_PATH_FEATURE, isSectionEnabledByEdition } from '@/config/edition'
 import type { QuestionOrigin } from '@/utils/questionOrigin'
 
 type MenuChild = Record<string, any>
@@ -82,6 +83,10 @@ export const useMenuStore = defineStore('menuStore', () => {
         return false
       }
       if (!deploymentCapabilities.isSupported(item.requiredCapability)) {
+        return false
+      }
+      // 销售版本控制（与角色、能力判断是 AND 关系）
+      if (!isSectionEnabledByEdition(NAV_PATH_FEATURE, item.path)) {
         return false
       }
       return true
