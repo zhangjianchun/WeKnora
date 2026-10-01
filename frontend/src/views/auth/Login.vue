@@ -1,103 +1,37 @@
 <template>
   <div class="login-layout">
-    <div class="animated-bg">
-      <div class="knowledge-node node-1">
-        <svg class="node-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-        </svg>
-      </div>
-      <div class="knowledge-node node-2">
-        <svg class="node-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-        </svg>
-      </div>
-      <div class="knowledge-node node-3">
-        <svg class="node-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 2L2 7l10 5 10-5-10-5z" />
-          <path d="M2 17l10 5 10-5" />
-          <path d="M2 12l10 5 10-5" />
-        </svg>
-      </div>
-      <div class="knowledge-node node-4">
-        <svg class="node-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <ellipse cx="12" cy="5" rx="9" ry="3" />
-          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
-          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
-        </svg>
-      </div>
-      <div class="knowledge-node node-5">
-        <svg class="node-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8" />
-          <path d="m21 21-4.35-4.35" />
-        </svg>
-      </div>
-      <div class="knowledge-node node-6">
-        <svg class="node-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path
-            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-          <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-          <line x1="12" y1="22.08" x2="12" y2="12" />
-        </svg>
-      </div>
-      <div class="knowledge-node node-7">
-        <svg class="node-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-          <polyline points="14 2 14 8 20 8" />
-        </svg>
-      </div>
-      <div class="knowledge-node node-8">
-        <svg class="node-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-          <circle cx="9" cy="7" r="4" />
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-        </svg>
-      </div>
-      <div class="knowledge-node node-9">
-        <svg class="node-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-        </svg>
-      </div>
-      <div class="knowledge-node node-10">
-        <svg class="node-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="3" />
-          <path
-            d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24" />
-        </svg>
-      </div>
-      <div class="knowledge-node node-11">
-        <svg class="node-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M9 11l3 3L22 4" />
-          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-        </svg>
-      </div>
-      <div class="knowledge-node node-12">
-        <svg class="node-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polygon
-            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-        </svg>
-      </div>
+    <!-- Abstract ambient background: glows + orbit rings + particles -->
+    <div class="animated-bg" aria-hidden="true">
+      <!-- 光晕层 -->
+      <div class="glow glow-a"></div>
+      <div class="glow glow-b"></div>
+      <div class="glow glow-c"></div>
 
-      <svg class="knowledge-lines" viewBox="0 0 100 100" preserveAspectRatio="none">
-        <line class="connection-line line-1" x1="20" y1="15" x2="35" y2="25" />
-        <line class="connection-line line-2" x1="35" y1="25" x2="55" y2="20" />
-        <line class="connection-line line-3" x1="55" y1="20" x2="85" y2="12" />
-        <line class="connection-line line-4" x1="8" y1="35" x2="25" y2="45" />
-        <line class="connection-line line-5" x1="25" y1="45" x2="65" y2="48" />
-        <line class="connection-line line-6" x1="20" y1="60" x2="60" y2="75" />
-        <line class="connection-line line-7" x1="20" y1="15" x2="20" y2="60" />
-        <line class="connection-line line-8" x1="55" y1="20" x2="45" y2="50" />
-        <line class="connection-line line-9" x1="65" y1="48" x2="90" y2="38" />
-        <line class="connection-line line-10" x1="40" y1="70" x2="75" y2="80" />
-        <line class="connection-line line-11" x1="35" y1="25" x2="25" y2="45" />
-        <line class="connection-line line-12" x1="75" y1="30" x2="65" y2="48" />
+      <!-- 旋转轨道层 -->
+      <svg class="orbit-svg" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid slice">
+        <ellipse class="orbit orbit-a" cx="400" cy="400" rx="360" ry="240" />
+        <ellipse class="orbit orbit-b" cx="400" cy="400" rx="260" ry="340" />
+        <ellipse class="orbit orbit-c" cx="400" cy="400" rx="150" ry="300" />
       </svg>
+
+      <!-- 浮动粒子层 -->
+      <span class="particle particle-1"></span>
+      <span class="particle particle-2"></span>
+      <span class="particle particle-3"></span>
+      <span class="particle particle-4"></span>
+      <span class="particle particle-5"></span>
+      <span class="particle particle-6"></span>
+      <span class="particle particle-7"></span>
+      <span class="particle particle-8"></span>
+      <span class="particle particle-9"></span>
+      <span class="particle particle-10"></span>
+      <span class="particle particle-11"></span>
+      <span class="particle particle-12"></span>
     </div>
 
     <!-- Logo - Top Left -->
     <div class="header-logo">
-      <img src="@/assets/img/weknora.png" alt="AI知识库" class="logo-image" />
+      <img src="@/assets/img/weknora-dark.png" alt="AI知识库" class="logo-image" />
     </div>
 
     <!-- Header Links - Top Right -->
@@ -131,10 +65,10 @@
         <p class="showcase-description">{{ $t('platform.description') }}</p>
 
         <div class="feature-tags">
-          <span class="tag">{{ $t('platform.rag') }}</span>
           <span class="tag">{{ $t('platform.agent') }}</span>
-          <span class="tag">{{ $t('platform.wiki') }}</span>
           <span class="tag">{{ $t('platform.hybridSearch') }}</span>
+          <span class="tag">{{ $t('platform.wiki') }}</span>
+          <span class="tag">{{ $t('platform.rag') }}</span>
         </div>
 
         <!-- Swiper Carousel -->
@@ -820,8 +754,8 @@ onMounted(async () => {
   min-height: 100%;
   overflow: hidden;
   position: relative;
-  background: linear-gradient(225deg, #022c22 0%, #064e3b 15%, #065f46 25%, #047857 38%, #059669 50%, #07C05F 65%, #10B981 78%, #34D399 90%, #6EE7B7 100%);
-
+  /*background: linear-gradient(125deg, #022c22 0%, #064e3b 15%, #065f46 25%, #047857 38%, #059669 50%, #07C05F 65%, #10B981 78%, #34D399 90%, #6EE7B7 100%);*/
+background: linear-gradient(135deg, #022c22 0%, #064e3b 30%, #047857 65%, #059669 100%);
   &::before {
     content: '';
     position: absolute;
@@ -835,212 +769,148 @@ onMounted(async () => {
   }
 }
 
+/* ============================================================
+   Ambient Background — abstract glow + orbits + particles
+   ============================================================ */
 .animated-bg {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   pointer-events: none;
   z-index: 1;
   overflow: hidden;
   contain: strict;
+  filter: saturate(0.9);
 }
 
-.knowledge-node {
+/* ---------- 光晕层 ---------- */
+.glow {
   position: absolute;
-  width: 40px;
-  height: 40px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.15);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  box-shadow:
-    0 0 15px rgba(255, 255, 255, 0.35),
-    0 0 30px rgba(16, 185, 129, 0.2),
-    inset 0 0 8px rgba(255, 255, 255, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: nodePulse 5s infinite ease-in-out;
+  filter: blur(70px);
+  opacity: 0.45;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+.glow-a {
+  width: 520px;
+  height: 520px;
+  left: -120px;
+  top: -120px;
+  background: radial-gradient(circle, rgba(110, 231, 183, 0.40) 0%, transparent 70%);
+  animation: glowBreathe 12s ease-in-out infinite;
+}
+
+.glow-b {
+  width: 620px;
+  height: 620px;
+  right: -160px;
+  bottom: -180px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.32) 0%, transparent 70%);
+  animation: glowBreathe 15s ease-in-out infinite reverse;
+}
+
+.glow-c {
+  width: 420px;
+  height: 420px;
+  left: 50%;
+  top: 55%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(52, 211, 153, 0.15) 0%, transparent 70%);
+  animation: glowBreathe 18s ease-in-out infinite;
+}
+
+@keyframes glowBreathe {
+  0%, 100% { opacity: 0.35; }
+  50%      { opacity: 0.55; }
+}
+
+/* ---------- 旋转轨道层 ---------- */
+.orbit-svg {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 120vmax;
+  height: 120vmax;
+  transform: translate(-50%, -50%);
+  opacity: 0.28;
+  pointer-events: none;
+}
+
+.orbit {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.5);
+  stroke-width: 0.5;
+  stroke-dasharray: 2 8;
+  transform-origin: 400px 400px;
+  will-change: transform;
+}
+
+.orbit-a {
+  animation: orbitSpin 110s linear infinite;
+}
+
+.orbit-b {
+  animation: orbitSpin 70s linear infinite reverse;
+  stroke-dasharray: 3 12;
+  opacity: 0.7;
+}
+
+.orbit-c {
+  animation: orbitSpin 150s linear infinite;
+  stroke-dasharray: 1 10;
+}
+
+@keyframes orbitSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ---------- 浮动粒子层 ---------- */
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 8px rgba(110, 231, 183, 0.9);
+  animation: particleFloat 9s ease-in-out infinite;
   will-change: transform, opacity;
 }
 
-.node-icon {
-  width: 20px;
-  height: 20px;
-  color: rgba(255, 255, 255, 0.9);
-}
+.particle-1  { top: 15%; left: 12%; animation-delay: 0s;    }
+.particle-2  { top: 25%; left: 78%; animation-delay: 0.5s;  }
+.particle-3  { top: 45%; left: 30%; animation-delay: 1s;    width: 3px; height: 3px; }
+.particle-4  { top: 35%; left: 60%; animation-delay: 1.5s;  }
+.particle-5  { top: 65%; left: 18%; animation-delay: 2s;    width: 5px; height: 5px; }
+.particle-6  { top: 55%; left: 88%; animation-delay: 2.5s;  }
+.particle-7  { top: 78%; left: 45%; animation-delay: 3s;    }
+.particle-8  { top: 20%; left: 42%; animation-delay: 3.5s;  width: 3px; height: 3px; }
+.particle-9  { top: 70%; left: 72%; animation-delay: 4s;    }
+.particle-10 { top: 40%; left: 8%;  animation-delay: 4.5s;  }
+.particle-11 { top: 82%; left: 28%; animation-delay: 5s;    width: 3px; height: 3px; }
+.particle-12 { top: 12%; left: 65%; animation-delay: 5.5s;  }
 
-.node-1 {
-  top: 15%;
-  left: 20%;
-  animation-delay: 0s;
-}
-
-.node-2 {
-  top: 25%;
-  left: 35%;
-  animation-delay: 0.5s;
-}
-
-.node-3 {
-  top: 20%;
-  left: 55%;
-  animation-delay: 1s;
-}
-
-.node-4 {
-  top: 30%;
-  left: 75%;
-  animation-delay: 1.5s;
-}
-
-.node-5 {
-  top: 45%;
-  left: 25%;
-  animation-delay: 2s;
-}
-
-.node-6 {
-  top: 50%;
-  left: 45%;
-  animation-delay: 2.5s;
-}
-
-.node-7 {
-  top: 48%;
-  left: 65%;
-  animation-delay: 3s;
-}
-
-.node-8 {
-  top: 60%;
-  left: 20%;
-  animation-delay: 0.3s;
-}
-
-.node-9 {
-  top: 12%;
-  right: 15%;
-  animation-delay: 1.8s;
-}
-
-.node-10 {
-  top: 38%;
-  right: 10%;
-  animation-delay: 2.3s;
-}
-
-.node-11 {
-  top: 70%;
-  left: 40%;
-  animation-delay: 0.8s;
-}
-
-.node-12 {
-  top: 65%;
-  left: 80%;
-  animation-delay: 1.3s;
-}
-
-@keyframes nodePulse {
-
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 0.65;
+@keyframes particleFloat {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.3;
   }
-
   50% {
-    transform: scale(1.08);
-    opacity: 0.9;
-  }
-}
-
-.knowledge-lines {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0.35;
-}
-
-.connection-line {
-  stroke: rgba(255, 255, 255, 0.5);
-  stroke-width: 1.5;
-  stroke-dasharray: 6, 3;
-  stroke-linecap: round;
-  animation: lineFlow 10s infinite linear;
-  will-change: stroke-dashoffset;
-}
-
-.line-1 {
-  animation-delay: 0s;
-}
-
-.line-2 {
-  animation-delay: 0.5s;
-}
-
-.line-3 {
-  animation-delay: 1s;
-}
-
-.line-4 {
-  animation-delay: 0.3s;
-}
-
-.line-5 {
-  animation-delay: 0.8s;
-}
-
-.line-6 {
-  animation-delay: 1.3s;
-}
-
-.line-7 {
-  animation-delay: 1.8s;
-}
-
-.line-8 {
-  animation-delay: 2.3s;
-}
-
-.line-9 {
-  animation-delay: 0.2s;
-}
-
-.line-10 {
-  animation-delay: 0.7s;
-}
-
-.line-11 {
-  animation-delay: 0.9s;
-}
-
-.line-12 {
-  animation-delay: 1.5s;
-}
-
-@keyframes lineFlow {
-  0% {
-    stroke-dashoffset: 0;
-  }
-
-  100% {
-    stroke-dashoffset: 18;
+    transform: translate(6px, -14px) scale(1.15);
+    opacity: 0.95;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .knowledge-node {
-    animation: none;
-    opacity: 0.65;
+  .glow,
+  .orbit,
+  .particle {
+    animation: none !important;
+    transition: none !important;
   }
-
-  .connection-line {
-    animation: none;
+  .animated-bg {
+    display: none;
   }
 }
 
@@ -1618,14 +1488,6 @@ onMounted(async () => {
 
 /* Responsive Design */
 @media (max-width: 1024px) {
-  .knowledge-node:nth-of-type(n + 13) {
-    display: none;
-  }
-
-  .connection-line:nth-of-type(n + 13) {
-    display: none;
-  }
-
   .showcase-subtitle {
     font-size: var(--app-text-2xl);
   }
@@ -1658,14 +1520,6 @@ onMounted(async () => {
 @media (max-width: 768px) {
   .login-layout {
     flex-direction: column;
-  }
-
-  .knowledge-node:nth-of-type(n + 9) {
-    display: none;
-  }
-
-  .connection-line:nth-of-type(n + 9) {
-    display: none;
   }
 
   .showcase-section {
@@ -1782,9 +1636,9 @@ onMounted(async () => {
 }
 
 @media (prefers-reduced-motion: reduce) {
-
-  .knowledge-node,
-  .connection-line {
+  .glow,
+  .orbit,
+  .particle {
     animation: none !important;
     transition: none !important;
   }
@@ -1798,19 +1652,32 @@ onMounted(async () => {
 <style lang="less">
 html[theme-mode="dark"] {
   .login-layout {
-    background: linear-gradient(225deg, #011a14 0%, #032e22 15%, #043a2c 25%, #05503d 38%, #046647 50%, #038a56 65%, #049b60 78%, #06a06a 90%, #07b074 100%);
+    background: linear-gradient(225deg, #06120e 0%, #071a14 50%, #08261c 100%);
   }
 
-  .knowledge-node {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
-    box-shadow: 0 0 8px rgba(255, 255, 255, 0.15);
+  /* ---------- Ambient background, dark variant ---------- */
+  .glow { opacity: 0.3; }
+
+  .glow-a {
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.42) 0%, transparent 70%);
+  }
+  .glow-b {
+    background: radial-gradient(circle, rgba(6, 148, 100, 0.38) 0%, transparent 70%);
+  }
+  .glow-c {
+    background: radial-gradient(circle, rgba(110, 231, 183, 0.14) 0%, transparent 70%);
   }
 
-  .connection-line {
-    stroke: rgba(255, 255, 255, 0.25);
+  .orbit {
+    stroke: rgba(110, 231, 183, 0.45);
   }
 
+  .particle {
+    background: rgba(167, 243, 208, 0.85);
+    box-shadow: 0 0 10px rgba(110, 231, 183, 0.9);
+  }
+
+  /* ---------- Others ---------- */
   .header-logo .logo-image {
     filter: invert(1) hue-rotate(180deg) brightness(1.1);
   }
