@@ -55,6 +55,7 @@ import {
 import { formatLocalizedList } from '@/utils/format-list';
 import { SKILL_ICON, type MentionItem, type MentionItemType, type MentionRequestItem } from '@/types/mention';
 import { toolboxLocation } from '@/config/toolbox';
+import { isFeatureEnabled } from '@/config/edition';
 import { supportedLevels, levelLabelKey, levelFromLegacy, clampLevel, type ReasoningLevel } from '@/utils/reasoningEffort';
 
 const route = useRoute();
@@ -2781,7 +2782,7 @@ defineExpose({
             :currentAgentId="selectedAgentId" :agents="enabledAgents" :all-models="allModels"
             @close="closeAgentModeSelector" @select="handleSelectAgent" @not-ready="handleAgentNotReady" />
 
-          <t-tooltip v-if="settingsStore.isAgentStreamMode" placement="top" theme="light"
+          <t-tooltip v-if="settingsStore.isAgentStreamMode && isFeatureEnabled('nav.toolbox')" placement="top" theme="light"
             :popupProps="{ overlayClassName: 'input-field-tooltip' }">
             <template #content>
               <div v-if="!browserConnection.knownOffline" class="browser-source-tooltip">
