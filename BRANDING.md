@@ -30,7 +30,7 @@ i18n 文件只改 value，不改 key。
 | `frontend/src/assets/img/weknora.png` | 替换为"AI知识库"logo（二进制替换，**文件名保留**，引用处不改） |
 | `frontend/src/assets/img/screenshot-1.svg` | 登录页轮播图内烤入文字 `WeKnora · Knowledge Search` → `AI Knowledge Base · Knowledge Search` |
 | `frontend/src/views/auth/Login.vue` | 删除顶部官网/GitHub 链接；logo 外层无 href 的 `<a>` 改为 `<div>`；图片 alt → AI知识库 |
-| `frontend/src/components/UserMenu.vue` | 删除用户菜单中的 GitHub 菜单项、`openGithub()` 函数及失效的 `.menu-github-star-icon` 样式（"帮助与文档"项保留） |
+| `frontend/src/components/UserMenu.vue` | 删除用户菜单中的 GitHub 菜单项、`openGithub()` 函数及失效的 `.menu-github-star-icon` 样式；后又删除"帮助与文档"菜单项、`openDocs()` 函数、`docsUrl` import 及失效的 `.menu-external-icon` 样式（i18n key `general.helpAndDocs` 保留未删） |
 
 ### B. 中文文案 `frontend/src/i18n/locales/zh-CN.ts`
 
@@ -52,7 +52,13 @@ i18n 文件只改 value，不改 key。
 
 与 zh/en 完全相同的 key 集合，每文件约 33 处 value，品牌名分别本地化为 **AIナレッジベース**（日）、**AI 지식베이스**（韩）、**AI-база знаний**（俄，按语法变格）；"本系统/平台"自称分别用 システム/プラットフォーム、시스템/플랫폼、система/платформа。ko/ru 中原本就未本地化、保留英文的条目（沙箱模板标题、docker 帮助、webhook 描述等）按 en-US 新值同步。每文件改完均 grep 复核：剩余命中仅为 i18n key 名、WeKnora Cloud 组、协议头、`WEKNORA_*` 环境变量、镜像/profile/包名、`aud=weknora`。
 
-### E. 示例数据 / 示例文本
+### E. 版本弹窗与登录页后续微调（五种语言）
+
+- `systemInfo.versionDescription`：去掉镜像名 → 中"当前应用服务端的版本号"（en `Version of the application backend` / 日 アプリケーションサーバーのバージョン / 韩 애플리케이션 서버의 버전 번호 / 俄 Версия серверной части приложения）
+- `systemInfo.frontendVersionDescription`：→ 中"当前 UI 界面的构建版本号"（en `Build version of the UI` / 日 UIのビルドバージョン / 韩 UI 빌드 버전 번호 / 俄 Версия сборки UI）
+- 登录/注册页 `platform.*` 标签与 `auth.subtitle` / `auth.registerSubtitle` 按产品新定位更新（混合检索/智能体问答/知识图谱/多模态解析等），五种语言同 key 对齐，key 名均未动。
+
+### F. 示例数据 / 示例文本
 
 | 文件 | 改动 |
 |---|---|
@@ -92,10 +98,12 @@ i18n 文件只改 value，不改 key。
 
 | 入口 | 位置 | 现状 |
 |---|---|---|
-| 官方文档链接（10 处入口，统一常量） | `utils/docsUrl.ts` 的 `DOCS_BASE_URL = https://weknora.weixin.qq.com/docs/` | 保留；自建文档就绪后改此常量一处即可全局切换 |
+| 官方文档链接（统一常量） | `utils/docsUrl.ts` 的 `DOCS_BASE_URL = https://weknora.weixin.qq.com/docs/` | 保留；自建文档就绪后改此常量一处即可全局切换 |
 | ~~用户菜单 GitHub 项~~ | `components/UserMenu.vue` | **已删除**（菜单项 + `openGithub()` + 死样式）。i18n 键 `common.github` / `common.githubStarTip` 已无引用但保留在 5 个语言文件中，升级时无需处理 |
-| 数据库迁移失败"报告 Issue" | `views/settings/SystemInfo.vue` `reportIssueURL` | 保留：仍指向腾讯 GitHub issue 模板，仅数据库迁移失败的故障场景出现；如需去除删按钮即可（"查看文档"保留） |
-| CLI 安装命令与文档 | `views/integrations/CliIntegrationLanding.vue` | 命令/仓库地址保留（改了不可用）；功能开关阶段可整页隐藏 |
+| ~~用户菜单"帮助与文档"~~ | `components/UserMenu.vue` | **已删除**（菜单项 + `openDocs()` + `docsUrl` import + `.menu-external-icon` 死样式）；i18n 键 `general.helpAndDocs` 保留 |
+| ~~设置页 7 处官方文档入口~~ | 成员管理"了解 RBAC"（`TenantMembers.vue`）、模型配置"查看内置模型管理指南"（`ModelSettings.vue`）、IM 集成"查看接入文档"（`IntegrationSettingsSection.vue`）、API 集成"API 文档"整行（`ApiIntegrationSettings.vue`）、CLI 页"查看 CLI 文档/安装说明"CTA（`CliIntegrationLanding.vue`）、沙箱配置"集群搭建指南"（`SandboxSettings.vue`）、知识图谱配置"如何启用知识图谱？"（`GraphSettings.vue`，同时移除 `VITE_KG_GUIDE_URL`/docsUrl 跳转逻辑，警告文案保留） | **已全部删除**（模板链接节点 + handler + 仅此处使用的 import/死样式）；描述正文保留；i18n 键（含 `graphSettings.howToEnable`）均保留未删；CLI 安装命令本身保留 |
+| 数据库迁移失败"报告 Issue" | `views/settings/SystemInfo.vue` `reportIssueURL` | 保留：仍指向腾讯 GitHub issue 模板，仅数据库迁移失败的故障场景出现；如需去除删按钮即可 |
+| CLI 安装命令 | `views/integrations/CliIntegrationLanding.vue` | 命令/仓库地址保留（改了不可用）；功能开关阶段可整页隐藏 |
 | 浏览器扩展商店 | i18n 中"Chrome 应用商店"相关 | 上架自有扩展前保留 |
 
 ## 七、跟官方升级时的冲突处理
