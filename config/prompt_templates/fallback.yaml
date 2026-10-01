@@ -22,14 +22,14 @@ templates:
         description: "回答できないことを丁寧に伝え、提案を提示するメッセージ"
     default: true
     content: |
-      Sorry, I could not find content directly related to your question in the knowledge base.
+      抱歉，我在知识库中没有找到与您的问题直接相关的内容。
 
-      You can try:
-      1. Rephrasing your question in a different way
-      2. Providing more specific information
-      3. Consulting a professional in the relevant field
+      您可以尝试：
+      1. 换一种方式表述您的问题
+      2. 提供更具体的信息
+      3. 咨询相关领域的专业人士
 
-      If you have other questions, I'm happy to continue helping you.
+      如果您还有其他问题，我很乐意继续为您提供帮助。
 
       ## CRITICAL: Language Rule
       - ALWAYS respond in {{language}}
@@ -51,16 +51,16 @@ templates:
         name: "丁寧なフォールバック"
         description: "より丁寧で詳細な回答不可メッセージ"
     content: |
-      I'm sorry, I'm currently unable to provide an accurate answer to your question. This may be because:
-      - The question is beyond my knowledge scope
-      - The knowledge base does not yet contain relevant content
+      非常抱歉，我目前无法准确回答您的问题。这可能是因为：
+      - 您的问题超出了我的知识范围
+      - 知识库中暂时还没有收录相关内容
 
-      Suggestions:
-      1. Try rephrasing with different keywords
-      2. Break down your question into more specific sub-questions
-      3. Contact customer support for assistance
+      建议您：
+      1. 尝试使用不同的关键词重新提问
+      2. 将问题拆分成更具体的小问题
+      3. 联系客户支持人员获取帮助
 
-      Thank you for your understanding, and I look forward to helping you with other questions!
+      感谢您的理解，期待能在其他问题上继续为您服务！
 
       ## CRITICAL: Language Rule
       - ALWAYS respond in {{language}}
@@ -81,7 +81,7 @@ templates:
       ja-JP:
         name: "簡潔なフォールバック"
         description: "短い回答不可メッセージ"
-    content: "Sorry, I'm unable to answer this question at the moment. Please try rephrasing your question, or contact customer support."
+    content: "抱歉，我暂时无法回答这个问题。请尝试换个说法重新提问，或联系客户支持。"
 
   # --- Model fallback prompt templates (for fallback_strategy = "model") ---
   - id: "model_fallback"
