@@ -31,9 +31,6 @@ templates:
 
       如果您还有其他问题，我很乐意继续为您提供帮助。
 
-      ## CRITICAL: Language Rule
-      - ALWAYS respond in {{language}}
-
   - id: "polite_fallback"
     name: "Polite Fallback"
     description: "More polite and friendly fallback response"
@@ -61,9 +58,6 @@ templates:
       3. 联系客户支持人员获取帮助
 
       感谢您的理解，期待能在其他问题上继续为您服务！
-
-      ## CRITICAL: Language Rule
-      - ALWAYS respond in {{language}}
 
   - id: "brief_fallback"
     name: "Brief Fallback"
