@@ -22,48 +22,48 @@ export const CURRENT_EDITION: Edition = 'pro'
 // -------- 功能 key 定义 --------
 // 新增受控功能时：① 在这里加 key；② 在 FEATURE_MATRIX 里加对应一行；③ 在对应 section 映射表登记
 export type FeatureKey =
-  // ==================== 左侧主导航 ====================
-  | 'nav.toolbox'                    // 工具箱
-  | 'nav.artifact'                   // 产物
-  | 'nav.sharedSpace'                // 共享空间
-  // ==================== 系统设置 ====================
-  | 'settings.personalMemory'        // 我的记忆
-  | 'settings.members'               // 成员管理
-  | 'settings.chathistory'           // 消息管理
-  | 'settings.longTermMemory'        // 长期记忆
-  | 'settings.ollama'                // Ollama
-  | 'settings.weknoraCloud'          // WeKnora Cloud
-  | 'settings.integrationIm'         // IM 集成
-  | 'settings.integrationEmbed'      // 网页嵌入
-  | 'settings.integrationApi'        // API 集成
-  | 'settings.integrationMcpServer'  // MCP Server
-  | 'settings.integrationCli'        // CLI
-  | 'settings.integrationChrome'     // Chrome 插件
-  | 'settings.integrationClaw'       // Claw Skill
-  | 'settings.sandbox'               // 沙箱配置
-  | 'settings.sandboxSecrets'        // 沙箱密钥（envvars/环境变量）
-  | 'settings.websearch'             // 网络搜索
-  | 'settings.adminSystem'           // 系统设置（系统管理）
-  | 'settings.adminModelCatalog'     // 模型目录
-  | 'settings.adminTaskQueue'        // 任务队列
-  | 'settings.adminApiKey'           // 平台 API Key
-  | 'settings.adminAuditLog'         // 审计日志
-  // ==================== 知识库设置 ====================
-  | 'kb.multimodal'                  // 知识库 · 图像处理
-  | 'kb.asr'                         // 知识库 · 音频处理
-  | 'kb.graph'                       // 知识库 · 知识图谱
-  | 'kb.datasource'                  // 知识库 · 数据源
-  | 'kb.share'                       // 知识库 · 共享管理
-  | 'kb.activity'                    // 知识库 · 活动记录
-  // ==================== 编辑智能体 ====================
-  | 'agent.suggestions'              // 智能体 · 对话推荐
-  | 'agent.conversation'             // 智能体 · 多轮对话
-  | 'agent.websearch'                // 智能体 · 网络搜索
-  | 'agent.tools'                    // 智能体 · 工具配置
-  | 'agent.mcp'                      // 智能体 · MCP 服务
-  | 'agent.multimodal'               // 智能体 · 附件上传
-  | 'agent.skills'                   // 智能体 · 技能
-  | 'agent.share'                    // 智能体 · 发布集成
+// ==================== 左侧主导航 ====================
+    | 'nav.toolbox'                    // 工具箱
+    | 'nav.artifact'                   // 产物
+    | 'nav.sharedSpace'                // 共享空间
+    // ==================== 系统设置 ====================
+    | 'settings.personalMemory'        // 我的记忆
+    | 'settings.members'               // 成员管理
+    | 'settings.chathistory'           // 消息管理
+    | 'settings.longTermMemory'        // 长期记忆
+    | 'settings.ollama'                // Ollama
+    | 'settings.weknoraCloud'          // WeKnora Cloud
+    | 'settings.integrationIm'         // IM 集成
+    | 'settings.integrationEmbed'      // 网页嵌入
+    | 'settings.integrationApi'        // API 集成
+    | 'settings.integrationMcpServer'  // MCP Server
+    | 'settings.integrationCli'        // CLI
+    | 'settings.integrationChrome'     // Chrome 插件
+    | 'settings.integrationClaw'       // Claw Skill
+    | 'settings.sandbox'               // 沙箱配置
+    | 'settings.sandboxSecrets'        // 沙箱密钥（envvars/环境变量）
+    | 'settings.websearch'             // 网络搜索
+    | 'settings.adminSystem'           // 系统设置（系统管理）
+    | 'settings.adminModelCatalog'     // 模型目录
+    | 'settings.adminTaskQueue'        // 任务队列
+    | 'settings.adminApiKey'           // 平台 API Key
+    | 'settings.adminAuditLog'         // 审计日志
+    // ==================== 知识库设置 ====================
+    | 'kb.multimodal'                  // 知识库 · 图像处理
+    | 'kb.asr'                         // 知识库 · 音频处理
+    | 'kb.graph'                       // 知识库 · 知识图谱
+    | 'kb.datasource'                  // 知识库 · 数据源
+    | 'kb.share'                       // 知识库 · 共享管理
+    | 'kb.activity'                    // 知识库 · 活动记录
+    // ==================== 编辑智能体 ====================
+    | 'agent.suggestions'              // 智能体 · 对话推荐
+    | 'agent.conversation'             // 智能体 · 多轮对话
+    | 'agent.websearch'                // 智能体 · 网络搜索
+    | 'agent.tools'                    // 智能体 · 工具配置
+    | 'agent.mcp'                      // 智能体 · MCP 服务
+    | 'agent.multimodal'               // 智能体 · 附件上传
+    | 'agent.skills'                   // 智能体 · 技能
+    | 'agent.share'                    // 智能体 · 发布集成
 
 // -------- 版本矩阵：每个功能一行，想移动功能只改这一行 --------
 // true = 该版本显示，false = 该版本隐藏
@@ -97,7 +97,7 @@ const FEATURE_MATRIX: Record<FeatureKey, Record<Edition, boolean>> = {
   'settings.integrationClaw':      { lite: false, pro: false, enterprise: false },  // Claw Skill
   'settings.sandbox':              { lite: false, pro: false, enterprise: false },  // 沙箱配置（bug）
   'settings.sandboxSecrets':       { lite: false, pro: false, enterprise: false  },  // 沙箱密钥（envvars）
-  
+
   'settings.adminSystem':          { lite: true, pro: true, enterprise: true },  // 系统设置（超管专有）
   'settings.adminModelCatalog':    { lite: false, pro: false, enterprise: false },  // 模型目录（bug + 超管专有）
   'settings.adminTaskQueue':       { lite: true, pro: true, enterprise: true },  // 任务队列（超管专有）
@@ -123,7 +123,7 @@ const FEATURE_MATRIX: Record<FeatureKey, Record<Edition, boolean>> = {
   'agent.suggestions':  { lite: true,  pro: true,  enterprise: true  },  // 问题推荐
   'agent.multimodal':   { lite: true,  pro: true,  enterprise: true  },  // 附件上传
   'agent.tools':        { lite: true,  pro: true,  enterprise: true  },  // 工具配置
-  'agent.websearch':    { lite: true, pro: true,  enterprise: true  },  // 网络搜索 （设置用那个搜索引擎）上级在 系统设置网络搜索 
+  'agent.websearch':    { lite: true, pro: true,  enterprise: true  },  // 网络搜索 （设置用那个搜索引擎）上级在 系统设置网络搜索
 
   // --- 进阶（pro+）---
   'agent.share':        { lite: false, pro: true,  enterprise: true  },  // 发布集成 共享空间
@@ -232,8 +232,8 @@ export function isFeatureEnabled(key: FeatureKey): boolean {
 
 /** 判断某个 section/path key 在当前版本是否开放（不在表里的放行） */
 export function isSectionEnabledByEdition(
-  mapping: Record<string, FeatureKey>,
-  sectionKey: string | undefined | null,
+    mapping: Record<string, FeatureKey>,
+    sectionKey: string | undefined | null,
 ): boolean {
   if (!sectionKey) return true
   const feature = mapping[sectionKey]
