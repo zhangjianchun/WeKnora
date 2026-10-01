@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useDeploymentCapabilitiesStore } from '@/stores/deploymentCapabilities'
 import { autoSetup, userInfoFromApi } from '@/api/auth'
 import type { DeploymentCapabilityKey } from '@/config/deploymentCapabilities'
+import { isSectionEnabledByEdition, NAV_PATH_FEATURE } from '@/config/edition'
 import { MessagePlugin } from 'tdesign-vue-next'
 import i18n from '@/i18n'
 import { normalizeSettingsSection } from '@/config/settingsRoute'
@@ -135,13 +136,13 @@ const router = createRouter({
           path: "artifacts",
           name: "artifactLibrary",
           component: () => import("../views/artifacts/ArtifactLibrary.vue"),
-          meta: { requiresInit: true, requiresAuth: true, requiredCapability: 'settings.sandbox' }
+          meta: { requiresInit: true, requiresAuth: true, requiredCapability: 'settings.sandbox', requiredEditionPath: 'artifacts' }
         },
         {
           path: "toolbox/:section?",
           name: "toolbox",
           component: () => import("../views/toolbox/Toolbox.vue"),
-          meta: { requiresInit: true, requiresAuth: true }
+          meta: { requiresInit: true, requiresAuth: true, requiredEditionPath: 'toolbox' }
         },
         {
           path: "agents",
@@ -188,7 +189,7 @@ const router = createRouter({
           path: "organizations",
           name: "organizationList",
           component: () => import("../views/organization/OrganizationList.vue"),
-          meta: { requiresInit: true, requiresAuth: true, requiredCapability: 'organizations' }
+          meta: { requiresInit: true, requiresAuth: true, requiredCapability: 'organizations', requiredEditionPath: 'organizations' }
         },
         // Compatibility redirects for /platform/system/* URLs. System
         // administration surfaces live as dedicated sections inside the
@@ -382,6 +383,14 @@ router.beforeEach(async (to, from, next) => {
   await deploymentCapabilities.ensureLoaded()
   const requiredCapability = to.meta.requiredCapability as DeploymentCapabilityKey | undefined
   if (requiredCapability && !deploymentCapabilities.isSupported(requiredCapability)) {
+    MessagePlugin.warning(i18n.global.t('settings.capabilityUnavailable'))
+    next('/platform/knowledge-bases')
+    return
+  }
+
+  // 销售版本路由守卫
+  const requiredEditionPath = to.meta.requiredEditionPath as string | undefined
+  if (requiredEditionPath && !isSectionEnabledByEdition(NAV_PATH_FEATURE, requiredEditionPath)) {
     MessagePlugin.warning(i18n.global.t('settings.capabilityUnavailable'))
     next('/platform/knowledge-bases')
     return
