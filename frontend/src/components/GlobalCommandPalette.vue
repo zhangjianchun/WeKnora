@@ -166,6 +166,7 @@ import { storeToRefs } from 'pinia'
 import { useCommandPaletteStore } from '@/stores/commandPalette'
 import { useAuthStore } from '@/stores/auth'
 import { useDeploymentCapabilitiesStore } from '@/stores/deploymentCapabilities'
+import { isFeatureEnabled } from '@/config/edition'
 import { useCmdkSearch, type CmdkFileGroup, type CmdkChunk, type CmdkMsgGroup } from './GlobalCommandPalette/useSearch'
 import { highlightText } from './GlobalCommandPalette/useHighlight'
 import { useStartChat } from './GlobalCommandPalette/useStartChat'
@@ -264,7 +265,9 @@ const allCommands = computed(() => {
       return deploymentCapabilities.isSupported('agents')
     }
     if (command.id === 'open-organizations') {
-      return authStore.hasRole('admin') && deploymentCapabilities.isSupported('organizations')
+      return authStore.hasRole('admin')
+        && deploymentCapabilities.isSupported('organizations')
+        && isFeatureEnabled('nav.sharedSpace')
     }
     return true
   })
