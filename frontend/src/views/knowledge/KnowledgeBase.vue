@@ -127,8 +127,8 @@ const kbViewTabs = computed(() => {
     )
   }
   // tabs.push({ key: 'gallery', icon: 'image', label: t(`${w}.tabGallery`), tip: t(`${w}.tabGalleryTip`) })//知识库 -> 画廊 功能报 404 先隐藏
-  // http://localhost/api/v1/knowledge-bases/506316bd-6533-4765-925c-1917405f65a2/gallery-config 
-  // http://localhost/api/v1/knowledge-bases/506316bd-6533-4765-925c-1917405f65a2/images?sort_order=desc&page=1&page_size=24 
+  // http://localhost/api/v1/knowledge-bases/506316bd-6533-4765-925c-1917405f65a2/gallery-config
+  // http://localhost/api/v1/knowledge-bases/506316bd-6533-4765-925c-1917405f65a2/images?sort_order=desc&page=1&page_size=24
   return tabs
 })
 const shownKbTab = computed<KbTab>(() =>
