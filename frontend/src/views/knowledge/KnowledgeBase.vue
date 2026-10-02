@@ -124,7 +124,7 @@ const kbViewTabs = computed(() => {
       { key: 'graph', icon: 'relation', label: t(`${w}.tabGraph`), tip: indexing ? wikiIndexingTip.value : t(`${w}.tabGraphTip`), indexing },
     )
   }
-  // tabs.push({ key: 'gallery', icon: 'image', label: t(`${w}.tabGallery`), tip: t(`${w}.tabGalleryTip`) })// 画廊功能报 404 先隐藏
+  // tabs.push({ key: 'gallery', icon: 'image', label: t(`${w}.tabGallery`), tip: t(`${w}.tabGalleryTip`) })//知识库 -> 画廊 功能报 404 先隐藏
   // http://localhost/api/v1/knowledge-bases/506316bd-6533-4765-925c-1917405f65a2/gallery-config 
   // http://localhost/api/v1/knowledge-bases/506316bd-6533-4765-925c-1917405f65a2/images?sort_order=desc&page=1&page_size=24 
   return tabs
