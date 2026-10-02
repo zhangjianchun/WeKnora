@@ -13,6 +13,7 @@
       variant="outline"
       shape="round"
       :title="$t('chat.requestInfoTitle')"
+      v-if="0"
     >
       <t-icon name="info-circle" />
     </t-button>
