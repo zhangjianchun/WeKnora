@@ -17,7 +17,7 @@
 export type Edition = 'lite' | 'pro' | 'enterprise'
 
 /** 交付时改这一行：'lite' | 'pro' | 'enterprise' */
-export const CURRENT_EDITION: Edition = 'enterprise'
+export const CURRENT_EDITION: Edition = 'lite'
 
 // -------- 功能 key 定义 --------
 // 新增受控功能时：① 在这里加 key；② 在 FEATURE_MATRIX 里加对应一行；③ 在对应 section 映射表登记
@@ -74,16 +74,16 @@ const FEATURE_MATRIX: Record<FeatureKey, Record<Edition, boolean>> = {
 
   // ═══════════════ 系统设置 ═══════════════
   // --- 基础（所有版本）---
-  'settings.personalMemory':  { lite: false,  pro: true,  enterprise: true  },  // 我的记忆
   'settings.ollama':          { lite: true,  pro: true,  enterprise: true  },  // Ollama（本地部署核心）
+  'settings.members':         { lite: true, pro: true,  enterprise: true  },  // 成员管理
 
   // --- 进阶（pro+）---
-  'settings.members':         { lite: true, pro: true,  enterprise: true  },  // 成员管理
+  'settings.personalMemory':  { lite: false,  pro: true,  enterprise: true  },  // 我的记忆
   'settings.longTermMemory':  { lite: false, pro: true,  enterprise: true  },  // 长期记忆
-  'settings.integrationIm':   { lite: false, pro: true,  enterprise: true  },  // IM 集成
-  'settings.websearch':       { lite: false, pro: true,  enterprise: true  },  // 网络搜索（会出域，lite 不给）
+  'settings.websearch':       { lite: false, pro: true,  enterprise: true  },  // 网络搜索（会出域，lite 不给）（添加搜索引擎设置多个搜索工具
 
   // --- 高级（仅 enterprise）---
+  'settings.integrationIm':         { lite: false, pro: false,  enterprise: true  },  // IM 集成
   'settings.integrationApi':        { lite: false, pro: false, enterprise: true  },  // API 集成
   'settings.integrationMcpServer':  { lite: false, pro: false, enterprise: true  },  // MCP Server
 
@@ -99,7 +99,7 @@ const FEATURE_MATRIX: Record<FeatureKey, Record<Edition, boolean>> = {
   'settings.adminSystem':          { lite: true, pro: true, enterprise: true },  // 系统设置（超管专有）
   'settings.adminModelCatalog':    { lite: false, pro: false, enterprise: false },  // 模型目录（bug + 超管专有）
   'settings.adminTaskQueue':       { lite: true, pro: true, enterprise: true },  // 任务队列（超管专有）
-  'settings.adminApiKey':          { lite: false, pro: false, enterprise: false },  // 平台 API Key（超管专有）
+  'settings.adminApiKey':          { lite: false, pro: false, enterprise: true },  // 平台 API Key（超管专有）
   'settings.adminAuditLog':        { lite: true, pro: true, enterprise: true },  // 审计日志（超管专有）
 
   // ═══════════════ 知识库设置 ═══════════════
@@ -121,10 +121,10 @@ const FEATURE_MATRIX: Record<FeatureKey, Record<Edition, boolean>> = {
   'agent.suggestions':  { lite: true,  pro: true,  enterprise: true  },  // 问题推荐
   'agent.multimodal':   { lite: true,  pro: true,  enterprise: true  },  // 附件上传
   'agent.tools':        { lite: true,  pro: true,  enterprise: true  },  // 工具配置
+  'agent.websearch':    { lite: true, pro: true,  enterprise: true  },  // 网络搜索 （设置用那个搜索引擎）上级在 系统设置网络搜索 
 
   // --- 进阶（pro+）---
-  'agent.websearch':    { lite: true, pro: true,  enterprise: true  },  // 网络搜索
-  'agent.share':        { lite: false, pro: true,  enterprise: true  },  // 发布集成
+  'agent.share':        { lite: false, pro: true,  enterprise: true  },  // 发布集成 共享空间
 
   // --- 高级（仅 enterprise）---
   'agent.mcp':          { lite: false, pro: false, enterprise: true  },  // MCP 服务
