@@ -67,50 +67,70 @@ export type FeatureKey =
 // -------- 版本矩阵：每个功能一行，想移动功能只改这一行 --------
 // true = 该版本显示，false = 该版本隐藏
 const FEATURE_MATRIX: Record<FeatureKey, Record<Edition, boolean>> = {
-  // ==================== 左侧主导航 ====================
-  'nav.toolbox':     { lite: false, pro: false,  enterprise: false  },  // 工具箱
-  'nav.artifact':    { lite: false,  pro: false,  enterprise: false  },  // 产物
-  'nav.sharedSpace': { lite: false, pro: false, enterprise: true  },  // 共享空间
+  // ═══════════════ 左侧主导航 ═══════════════
+  'nav.toolbox':     { lite: false, pro: false, enterprise: false },  // 工具箱（沙箱 bug 隐藏）
+  'nav.artifact':    { lite: false, pro: false, enterprise: false },  // 产物（隐藏）
+  'nav.sharedSpace': { lite: false, pro: true,  enterprise: true  },  // 共享空间（pro+）
 
-  // ==================== 系统设置 ====================
-  'settings.personalMemory':       { lite: false, pro: true,  enterprise: true  },  // 我的记忆
-  'settings.members':              { lite: false, pro: true,  enterprise: true  },  // 成员管理
+  // ═══════════════ 系统设置 ═══════════════
+  // --- 基础（所有版本）---
+  'settings.personalMemory':  { lite: false,  pro: true,  enterprise: true  },  // 我的记忆
+  'settings.ollama':          { lite: true,  pro: true,  enterprise: true  },  // Ollama（本地部署核心）
+
+  // --- 进阶（pro+）---
+  'settings.members':         { lite: true, pro: true,  enterprise: true  },  // 成员管理
+  'settings.longTermMemory':  { lite: false, pro: true,  enterprise: true  },  // 长期记忆
+  'settings.integrationIm':   { lite: false, pro: true,  enterprise: true  },  // IM 集成
+  'settings.websearch':       { lite: false, pro: true,  enterprise: true  },  // 网络搜索（会出域，lite 不给）
+
+  // --- 高级（仅 enterprise）---
+  'settings.integrationApi':        { lite: false, pro: false, enterprise: true  },  // API 集成
+  'settings.integrationMcpServer':  { lite: false, pro: false, enterprise: true  },  // MCP Server
+
+  // --- 彻底隐藏 ---
   'settings.chathistory':          { lite: false, pro: false, enterprise: false },  // 消息管理
-  'settings.longTermMemory':       { lite: false, pro: true,  enterprise: true  },  // 长期记忆
-  'settings.ollama':               { lite: true, pro: true, enterprise: true },  // Ollama
   'settings.weknoraCloud':         { lite: false, pro: false, enterprise: false },  // WeKnora Cloud
-  'settings.integrationIm':        { lite: false, pro: false, enterprise: true },  // IM 集成
   'settings.integrationEmbed':     { lite: false, pro: false, enterprise: false },  // 网页嵌入
-  'settings.integrationApi':       { lite: false, pro: false, enterprise: true  },  // API 集成
-  'settings.integrationMcpServer': { lite: false, pro: false, enterprise: true },  // MCP Server
   'settings.integrationCli':       { lite: false, pro: false, enterprise: false },  // CLI
   'settings.integrationChrome':    { lite: false, pro: false, enterprise: false },  // Chrome 插件
   'settings.integrationClaw':      { lite: false, pro: false, enterprise: false },  // Claw Skill
-  'settings.sandbox':              { lite: true, pro: true,  enterprise: true  },  // 沙箱配置  系统设置->网络安全->启用 Docker 沙箱 开启才会展示
-  'settings.websearch':            { lite: false, pro: true,  enterprise: true  },  // 网络搜索
-  'settings.adminSystem':          { lite: true, pro: true, enterprise: true  },  // 系统设置（系统管理）
-  'settings.adminModelCatalog':    { lite: false, pro: false, enterprise: false  },  // 模型目录
-  'settings.adminTaskQueue':       { lite: false, pro: false, enterprise: true },  // 任务队列
-  'settings.adminApiKey':          { lite: false, pro: false, enterprise: false },  // 平台 API Key
-  'settings.adminAuditLog':        { lite: false, pro: false, enterprise: true  },  // 审计日志
+  'settings.sandbox':              { lite: false, pro: false, enterprise: false },  // 沙箱配置（bug）
+  
+  'settings.adminSystem':          { lite: true, pro: true, enterprise: true },  // 系统设置（超管专有）
+  'settings.adminModelCatalog':    { lite: false, pro: false, enterprise: false },  // 模型目录（bug + 超管专有）
+  'settings.adminTaskQueue':       { lite: true, pro: true, enterprise: true },  // 任务队列（超管专有）
+  'settings.adminApiKey':          { lite: false, pro: false, enterprise: false },  // 平台 API Key（超管专有）
+  'settings.adminAuditLog':        { lite: true, pro: true, enterprise: true },  // 审计日志（超管专有）
 
-  // ==================== 知识库设置 ====================
+  // ═══════════════ 知识库设置 ═══════════════
+  // --- 基础 ---
+  'kb.activity':   { lite: true,  pro: true,  enterprise: true  },  // 活动记录
+
+  // --- 进阶（pro+）---
   'kb.multimodal': { lite: false, pro: true,  enterprise: true  },  // 图像处理
-  'kb.asr':        { lite: false, pro: false, enterprise: true },  // 音频处理
   'kb.graph':      { lite: false, pro: true,  enterprise: true  },  // 知识图谱
-  'kb.datasource': { lite: false, pro: false, enterprise: true },  // 数据源
   'kb.share':      { lite: false, pro: true,  enterprise: true  },  // 共享管理
-  'kb.activity':   { lite: false, pro: false, enterprise: true },  // 活动记录
 
-  // ==================== 编辑智能体 ====================
-  'agent.conversation': { lite: true,  pro: true,  enterprise: true },  // 多轮对话
-  'agent.suggestions': { lite: false, pro: false, enterprise: true },  // 问题推荐
-  'agent.websearch':   { lite: false, pro: true,  enterprise: true  },  // 网络搜索
-  'agent.multimodal':  { lite: true,  pro: true,  enterprise: true },  // 附件上传
-  'agent.tools':       { lite: false, pro: true,  enterprise: true  },  // 工具配置
-  'agent.mcp':         { lite: false, pro: false, enterprise: true },  // MCP 服务 方式
-  'agent.skills':      { lite: true,  pro: true,  enterprise: true },  // 技能
-  'agent.share':       { lite: false, pro: false, enterprise: true },  // 发布集成 共享管理
+  // --- 高级（仅 enterprise）---
+  'kb.asr':        { lite: false, pro: false, enterprise: true  },  // 音频处理
+  'kb.datasource': { lite: false, pro: false, enterprise: true  },  // 数据源（拉外部数据）
+
+  // ═══════════════ 编辑智能体 ═══════════════
+  // --- 基础 ---
+  'agent.conversation': { lite: true,  pro: true,  enterprise: true  },  // 多轮对话
+  'agent.suggestions':  { lite: true,  pro: true,  enterprise: true  },  // 问题推荐
+  'agent.multimodal':   { lite: true,  pro: true,  enterprise: true  },  // 附件上传
+  'agent.tools':        { lite: true,  pro: true,  enterprise: true  },  // 工具配置
+
+  // --- 进阶（pro+）---
+  'agent.websearch':    { lite: true, pro: true,  enterprise: true  },  // 网络搜索
+  'agent.share':        { lite: false, pro: true,  enterprise: true  },  // 发布集成
+
+  // --- 高级（仅 enterprise）---
+  'agent.mcp':          { lite: false, pro: false, enterprise: true  },  // MCP 服务
+
+  // --- 彻底隐藏 ---
+  'agent.skills':       { lite: false, pro: false, enterprise: false },  // 技能（沙箱 bug）
 }
 
 // -------- 消费方 section key → feature key 映射 --------
