@@ -41,6 +41,7 @@ export type FeatureKey =
   | 'settings.integrationChrome'     // Chrome 插件
   | 'settings.integrationClaw'       // Claw Skill
   | 'settings.sandbox'               // 沙箱配置
+  | 'settings.sandboxSecrets'        // 沙箱密钥（envvars/环境变量）
   | 'settings.websearch'             // 网络搜索
   | 'settings.adminSystem'           // 系统设置（系统管理）
   | 'settings.adminModelCatalog'     // 模型目录
@@ -76,11 +77,11 @@ const FEATURE_MATRIX: Record<FeatureKey, Record<Edition, boolean>> = {
   // --- 基础（所有版本）---
   'settings.ollama':          { lite: true,  pro: true,  enterprise: true  },  // Ollama（本地部署核心）
   'settings.members':         { lite: true, pro: true,  enterprise: true  },  // 成员管理
+  'settings.websearch':       { lite: true, pro: true,  enterprise: true  },  // 网络搜索（会出域，lite 不给）（添加搜索引擎设置多个搜索工具
 
   // --- 进阶（pro+）---
   'settings.personalMemory':  { lite: false,  pro: true,  enterprise: true  },  // 我的记忆
   'settings.longTermMemory':  { lite: false, pro: true,  enterprise: true  },  // 长期记忆
-  'settings.websearch':       { lite: false, pro: true,  enterprise: true  },  // 网络搜索（会出域，lite 不给）（添加搜索引擎设置多个搜索工具
 
   // --- 高级（仅 enterprise）---
   'settings.integrationIm':         { lite: false, pro: false,  enterprise: true  },  // IM 集成
@@ -95,6 +96,7 @@ const FEATURE_MATRIX: Record<FeatureKey, Record<Edition, boolean>> = {
   'settings.integrationChrome':    { lite: false, pro: false, enterprise: false },  // Chrome 插件
   'settings.integrationClaw':      { lite: false, pro: false, enterprise: false },  // Claw Skill
   'settings.sandbox':              { lite: false, pro: false, enterprise: false },  // 沙箱配置（bug）
+  'settings.sandboxSecrets':       { lite: false, pro: false, enterprise: false  },  // 沙箱密钥（envvars）
   
   'settings.adminSystem':          { lite: true, pro: true, enterprise: true },  // 系统设置（超管专有）
   'settings.adminModelCatalog':    { lite: false, pro: false, enterprise: false },  // 模型目录（bug + 超管专有）
@@ -167,6 +169,7 @@ export const SETTINGS_SECTION_FEATURE: Record<string, FeatureKey> = {
   'integration-chrome': 'settings.integrationChrome',
   'integration-claw': 'settings.integrationClaw',
   sandbox: 'settings.sandbox',
+  envvars: 'settings.sandboxSecrets',
   websearch: 'settings.websearch',
   'system-global': 'settings.adminSystem',
   'model-catalog': 'settings.adminModelCatalog',
