@@ -28,3 +28,8 @@ dependencies = [
     "textract==1.5.0",
     "trafilatura>=2.0.0",
 ]
+
+[dependency-groups]
+dev = [
+    "pyinstaller>=6.22.3",
+]
