@@ -1,6 +1,6 @@
 services:
   frontend:
-    image: wechatopenai/weknora-ui:${WEKNORA_VERSION:-latest}
+    image: ${IMAGE_NAMESPACE:-wechatopenai}/weknora-ui:${AIRAG_VERSION:-latest}
     # Multi-stage Dockerfile builds dist inside the image (no host npm required).
     # Optional: NPM_REGISTRY=https://registry.npmmirror.com docker compose build frontend
     # VITE_FRONTEND_COMMIT: start_all.sh / make docker-build-frontend inject git;
@@ -11,7 +11,7 @@ services:
         VITE_FRONTEND_COMMIT: ${VITE_FRONTEND_COMMIT:-unknown}
         NPM_REGISTRY: ${NPM_REGISTRY:-}
         NODE_MAX_OLD_SPACE_SIZE: ${NODE_MAX_OLD_SPACE_SIZE:-4096}
-    container_name: WeKnora-frontend
+    container_name: AiRAG-frontend
     ports:
       - "${FRONTEND_PORT:-80}:80"
     environment:
@@ -20,64 +20,45 @@ services:
       - DEFAULT_LOCALE=${DEFAULT_LOCALE:-}
       - APP_HOST=${APP_HOST:-app}
       # APP_BACKEND_PORT: the port NGINX proxies to (default 8080).
-      # For local deployment this is the App container's listening port, independent of host-mapped APP_PORT.
-      # For remote deployment, set this to the remote App's service port.
       - APP_PORT=${APP_BACKEND_PORT:-8080}
       - APP_SCHEME=${APP_SCHEME:-http}
-    # NOTE: If using a remote App backend, comment out or remove the depends_on
-    # block below and set APP_HOST/APP_BACKEND_PORT/APP_SCHEME in your .env file.
     depends_on:
       app:
         condition: service_healthy
     networks:
-      - WeKnora-network
+      - airag-network
     restart: unless-stopped
 
   app:
     user: root
-    image: wechatopenai/weknora-app:${WEKNORA_VERSION:-latest}
+    image: ${IMAGE_NAMESPACE:-wechatopenai}/weknora-app:${AIRAG_VERSION:-latest}
     build:
       context: .
       dockerfile: docker/Dockerfile.app
       args:
         - APK_MIRROR_ARG=${APK_MIRROR_ARG:-}
         - WITH_ANYDOC=${WITH_ANYDOC:-1}
-    container_name: WeKnora-app
+    container_name: AiRAG-app
     ports:
       - "${APP_PORT:-8080}:8080"
     volumes:
       - data-files:/data/files
       - docreader-tmp:/tmp/docreader:ro
       - ./config/config.yaml:/app/config/config.yaml
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./config/prompt_templates:/app/config/prompt_templates:ro 
+      - ./config/prompt_templates:/app/config/prompt_templates:ro
       # Docker 沙箱默认关闭（见 WEKNORA_SANDBOX_DOCKER_ENABLED）。需要本机 daemon 时
       # 同时设 true 并挂载实际 socket——这等同宿主机 root，仅私有化单机。
-      # 入口脚本会按 socket GID 把 appuser 加入对应组（compose group_add 在 gosu 后无效）。
       # - /var/run/docker.sock:/var/run/docker.sock
-      # Optional: declarative built-in models. Copy config/builtin_models.yaml.example
-      # to config/builtin_models.yaml, edit it for your deployment, then
-      # uncomment the line below. See website-docs/03-features/06-models.md.
+      # Optional: declarative built-in models.
       # - ./config/builtin_models.yaml:/app/config/builtin_models.yaml:ro
-      # Optional: model catalog overlay (extra vendors / model overrides).
-      # Copy config/models.json.example to config/models.json, then
+      # Optional: model catalog overlay.
       # - ./config/models.json:/app/config/models.json:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s
-    # Source .env so deployment-specific variables (e.g. those referenced by
-    # config/builtin_models.yaml via ${ENV}, or any future feature) reach the
-    # app container without having to be enumerated under `environment:`.
-    #
-    # NOTE: the array form below is used instead of the map form
-    # (env_file: - path: .env, required: false) because the map syntax
-    # requires Docker Compose v2.24+ (Jan 2024) and would break parsing on
-    # older deploys. The trade-off is that Compose errors out if .env is
-    # absent — see scripts/start_all.sh for the pre-flight touch that keeps
-    # fresh clones working.
+      start_period: 180s
     env_file:
       - .env
     environment:
@@ -199,7 +180,6 @@ services:
       # Docreader 解析调优
       - DOCREADER_ADDR=${DOCREADER_ADDR:-docreader:50051}
       - DOCREADER_TRANSPORT=${DOCREADER_TRANSPORT:-grpc}
-      # docreader gRPC TLS / 认证（客户端侧）
       - GRPC_TLS_ENABLED=${GRPC_TLS_ENABLED:-false}
       - GRPC_TLS_CERT=${GRPC_TLS_CERT:-}
       - GRPC_TLS_KEY=${GRPC_TLS_KEY:-}
@@ -396,7 +376,7 @@ services:
       docreader:
         condition: service_healthy
     networks:
-      - WeKnora-network
+      - airag-network
     restart: unless-stopped
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -404,8 +384,8 @@ services:
   # Sandbox 镜像：仅用于 build/pull，非常驻。Docker 沙箱默认关闭，需
   # WEKNORA_SANDBOX_DOCKER_ENABLED=true 并挂载 docker.sock 后，app 才会按会话创建容器。
   sandbox:
-    image: wechatopenai/weknora-sandbox:${WEKNORA_VERSION:-latest}
-    container_name: WeKnora-sandbox
+    image: ${IMAGE_NAMESPACE:-wechatopenai}/weknora-sandbox:${AIRAG_VERSION:-latest}
+    container_name: AiRAG-sandbox
     build:
       context: .
       dockerfile: docker/Dockerfile.sandbox
@@ -416,7 +396,7 @@ services:
     restart: "no"
 
   docreader:
-    image: wechatopenai/weknora-docreader:${WEKNORA_VERSION:-latest}
+    image: ${IMAGE_NAMESPACE:-wechatopenai}/weknora-docreader:${AIRAG_VERSION:-latest}
     build:
       context: .
       dockerfile: docker/Dockerfile.docreader
@@ -424,7 +404,7 @@ services:
         - APT_MIRROR=${APT_MIRROR:-}
         - PLAYWRIGHT_DOWNLOAD_HOST=${PLAYWRIGHT_DOWNLOAD_HOST:-}
         - PLAYWRIGHT_WEBKIT_DOWNLOAD_HOST=${PLAYWRIGHT_WEBKIT_DOWNLOAD_HOST:-}
-    container_name: WeKnora-docreader
+    container_name: AiRAG-docreader
     # docreader gRPC ships without auth/TLS and is only consumed by the app
     # container over the WeKnora-network (DOCREADER_ADDR defaults to
     # docreader:50051), so we don't publish 50051 to the host. `expose` keeps
@@ -515,9 +495,9 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s
+      start_period: 180s
     networks:
-      - WeKnora-network
+      - airag-network
     restart: unless-stopped
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -528,8 +508,8 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.odl-hybrid
-    image: weknora-odl-hybrid:local
-    container_name: WeKnora-odl-hybrid
+    image: airag-odl-hybrid:local
+    container_name: AiRAG-odl-hybrid
     profiles:
       - odl-hybrid
     expose:
@@ -537,13 +517,13 @@ services:
     environment:
       - ODL_HYBRID_EXTRA_ARGS=${ODL_HYBRID_EXTRA_ARGS:---no-ocr}
     networks:
-      - WeKnora-network
+      - airag-network
     restart: unless-stopped
 
   # 修改的PostgreSQL配置
   postgres:
     image: paradedb/paradedb:v0.22.6-pg17
-    container_name: WeKnora-postgres
+    container_name: AiRAG-postgres
     environment:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
@@ -551,24 +531,24 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
-      - WeKnora-network
+      - airag-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s # 增加时间间隔
       timeout: 10s # 增加超时时间
       retries: 3 # 减少重试次数，让失败更快反馈
-      start_period: 30s # 给予初始启动更多时间
+      start_period: 300s # 给予初始启动更多时间
     restart: unless-stopped
     # 添加停机时的优雅退出时间
     stop_grace_period: 1m
 
   redis:
     image: redis:7.0-alpine
-    container_name: WeKnora-redis
+    container_name: AiRAG-redis
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     restart: always
     networks:
-      - WeKnora-network
+      - airag-network
 
   # One-shot init: copy the read-only template settings.yml into a named volume
   # before searxng starts. Necessary because the searxng entrypoint sed-replaces
@@ -577,34 +557,28 @@ services:
   # working tree (and prevent re-templating on subsequent restarts).
   searxng-init:
     image: busybox:1.36
-    container_name: WeKnora-searxng-init
+    container_name: AiRAG-searxng-init
     command: ["sh", "-c", "cp /template/settings.yml /etc/searxng/settings.yml && chmod 0644 /etc/searxng/settings.yml"]
     volumes:
       - ./docker/searxng/settings.yml:/template/settings.yml:ro
       - searxng_config:/etc/searxng
     restart: "no"
     networks:
-      - WeKnora-network
+      - airag-network
     profiles:
       - searxng
       - full
 
   searxng:
     image: searxng/searxng:latest
-    container_name: WeKnora-searxng
-    # Bind to loopback by default; override SEARXNG_BIND=0.0.0.0 only after
-    # rotating SEARXNG_SECRET and (optionally) re-enabling limiter in settings.yml.
+    container_name: AiRAG-searxng
     ports:
       - "${SEARXNG_BIND:-127.0.0.1}:${SEARXNG_PORT:-8888}:8080"
     volumes:
       - searxng_config:/etc/searxng
     environment:
       - SEARXNG_BASE_URL=http://localhost:${SEARXNG_PORT:-8888}/
-      - INSTANCE_NAME=weknora-searxng
-      # Default value lets `docker compose --profile searxng up` work zero-config.
-      # Override via .env (e.g. `openssl rand -hex 32`) before exposing the
-      # instance beyond the default 127.0.0.1 bind, since secret_key signs
-      # image-proxy URLs and a shared default would be guessable by anyone.
+      - INSTANCE_NAME=airag-searxng
       - SEARXNG_SECRET=${SEARXNG_SECRET:-weknora-default-searxng-secret-rotate-before-exposing-publicly}
     cap_drop:
       - ALL
@@ -617,14 +591,14 @@ services:
       searxng-init:
         condition: service_completed_successfully
     networks:
-      - WeKnora-network
+      - airag-network
     profiles:
       - searxng
       - full
 
   minio:
     image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
-    container_name: WeKnora-minio
+    container_name: AiRAG-minio
     ports:
       - "${MINIO_PORT:-9000}:9000"
       - "${MINIO_CONSOLE_PORT:-9001}:9001"
@@ -640,14 +614,14 @@ services:
       timeout: 20s
       retries: 3
     networks:
-      - WeKnora-network
+      - airag-network
     profiles:
       - minio
       - full
 
   neo4j:
     image: neo4j:2025.10.1
-    container_name: WeKnora-neo4j
+    container_name: AiRAG-neo4j
     volumes:
       - neo4j-data:/data
     environment:
@@ -661,21 +635,21 @@ services:
       - "7687:7687"
     restart: always
     networks:
-      - WeKnora-network
+      - airag-network
     profiles:
       - neo4j
       - full
 
   qdrant:
     image: qdrant/qdrant:v1.16.2
-    container_name: WeKnora-qdrant
+    container_name: AiRAG-qdrant
     ports:
       - "${QDRANT_REST_PORT:-6333}:6333"
       - "${QDRANT_PORT:-6334}:6334"
     volumes:
       - qdrant_data:/qdrant/storage
     networks:
-      - WeKnora-network
+      - airag-network
     restart: unless-stopped
     profiles:
       - qdrant
@@ -683,7 +657,7 @@ services:
 
   milvus:
     image: milvusdb/milvus:v2.6.11
-    container_name: WeKnora-milvus
+    container_name: AiRAG-milvus
     security_opt:
       - seccomp:unconfined
     command: ["milvus", "run", "standalone"]
@@ -704,14 +678,14 @@ services:
     volumes:
       - milvus_data:/var/lib/milvus
     networks:
-      - WeKnora-network
+      - airag-network
     restart: unless-stopped
     profiles:
       - milvus
 
   weaviate:
     image: semitechnologies/weaviate:1.28.4
-    container_name: WeKnora-weaviate
+    container_name: AiRAG-weaviate
     environment:
       - PERSISTENCE_DATA_PATH=/var/lib/weaviate
       - CLUSTER_HOSTNAME=node1
@@ -727,30 +701,14 @@ services:
     volumes:
       - weaviate_data:/var/lib/weaviate
     networks:
-      - WeKnora-network
+      - airag-network
     restart: unless-stopped
     profiles:
       - weaviate
 
-  # ---------------------------------------------------------------------------
-  # Apache Doris 4.1（FE + BE 单实例 standalone 部署，opt-in via `--profile doris`）
-  #
-  # 版本要求：必须 >= 3.0（HNSW ANN 索引、cosine_distance_approximate、
-  # Stream Load partial_columns）。本 compose 使用 4.1 官方稳定 tag。
-  #
-  # 端口说明：
-  #   - 9030 (FE MySQL)：WeKnora 主链路读写、SQL 查询都走此端口。
-  #   - 8030 (FE HTTP)：Stream Load partial update 入口。
-  #   - 8040 (BE)     ：BE 心跳与数据传输；FE 会把 stream load 重定向到 BE。
-  #
-  # 启用方式：
-  #   docker compose --profile doris up -d
-  #
-  # 数据持久化在 doris_fe_data / doris_be_data 卷中。
-  # ---------------------------------------------------------------------------
   doris-fe:
     image: apache/doris:fe-4.1.0
-    container_name: WeKnora-doris-fe
+    container_name: AiRAG-doris-fe
     hostname: doris-fe
     environment:
       - FE_SERVERS=fe1:doris-fe:9010
@@ -762,14 +720,14 @@ services:
       - doris_fe_meta:/opt/apache-doris/fe/doris-meta
       - doris_fe_log:/opt/apache-doris/fe/log
     networks:
-      - WeKnora-network
+      - airag-network
     restart: unless-stopped
     profiles:
       - doris
 
   doris-be:
     image: apache/doris:be-4.1.0
-    container_name: WeKnora-doris-be
+    container_name: AiRAG-doris-be
     hostname: doris-be
     environment:
       - FE_SERVERS=fe1:doris-fe:9010
@@ -782,14 +740,14 @@ services:
       - doris_be_storage:/opt/apache-doris/be/storage
       - doris_be_log:/opt/apache-doris/be/log
     networks:
-      - WeKnora-network
+      - airag-network
     restart: unless-stopped
     profiles:
       - doris
 
   dex:
     image: dexidp/dex:latest
-    container_name: dex
+    container_name: AiRAG-dex
     ports:
       - "5556:5556"
     volumes:
@@ -799,42 +757,19 @@ services:
       - dex
       - full
 
-  # ---------------------------------------------------------------------------
-  # Langfuse 自建可观测栈 (opt-in via `--profile langfuse`)
-  #
-  # 为了最小化资源占用，Langfuse 会复用 WeKnora 已有的 postgres 和 redis：
-  #   - postgres：在 WeKnora-postgres 中创建独立的 "langfuse" 数据库
-  #   - redis  ：复用 WeKnora-redis 的 DB 1（WeKnora 自己用 DB 0）
-  # 需要新增的只有 Langfuse 应用自身 + ClickHouse（OLAP）+ 专用 MinIO（事件/媒体 S3）。
-  #
-  # 启用方式：
-  #   docker compose --profile langfuse up -d
-  # 启用后：
-  #   1. Langfuse UI: http://localhost:3000 （首次访问注册管理员并在 Settings → API Keys 生成 key）
-  #   2. 在 .env 里把 LANGFUSE_HOST 改成 http://langfuse-web:3000（容器间通信）
-  #      并填入刚生成的 LANGFUSE_PUBLIC_KEY / LANGFUSE_SECRET_KEY
-  #   3. 重启 app 容器：docker compose up -d app
-  # 相关默认密码已写成占位符，生产部署务必用 openssl rand 重新生成！
-  # ---------------------------------------------------------------------------
-
-  # 一次性初始化脚本：在已有的 WeKnora-postgres 里创建 langfuse 数据库（幂等，数据库已存在则跳过）
-  # 复用 WeKnora-postgres 的 ParadeDB 镜像，避免多拉一个 postgres 镜像
   langfuse-db-init:
     image: paradedb/paradedb:v0.22.6-pg17
-    container_name: WeKnora-langfuse-db-init
+    container_name: AiRAG-langfuse-db-init
     depends_on:
       postgres:
         condition: service_healthy
     environment:
       PGPASSWORD: ${DB_PASSWORD}
-    # ${LANGFUSE_DB_NAME:-langfuse} / ${DB_USER} 由 compose 解析成字面量后再传给 shell；
-    # 脚本中需要 shell 自己展开的变量（无）一律用 $$ 转义。
     entrypoint: ["sh", "-c"]
     command:
       - |
         set -e
-        echo "[langfuse-db-init] ensuring database '${LANGFUSE_DB_NAME:-langfuse}' exists in WeKnora-postgres..."
-        # 先刷新现有库的 collation（镜像 ICU 2.36 与宿主 2.41 不匹配时必须做），否则 CREATE DATABASE 会失败
+        echo "[langfuse-db-init] ensuring database '${LANGFUSE_DB_NAME:-langfuse}' exists in AiRAG-postgres..."
         psql -h postgres -U ${DB_USER} -d postgres -v ON_ERROR_STOP=0 -c "ALTER DATABASE template1 REFRESH COLLATION VERSION;" >/dev/null 2>&1 || true
         psql -h postgres -U ${DB_USER} -d postgres -v ON_ERROR_STOP=0 -c "ALTER DATABASE postgres REFRESH COLLATION VERSION;" >/dev/null 2>&1 || true
         # 幂等创建：已存在则跳过；不存在则从 template0 克隆（template0 永远不会有 collation 漂移）
@@ -846,7 +781,7 @@ services:
         fi
         echo "[langfuse-db-init] done."
     networks:
-      - WeKnora-network
+      - airag-network
     restart: "no"
     profiles:
       - langfuse
@@ -854,7 +789,7 @@ services:
 
   langfuse-clickhouse:
     image: clickhouse/clickhouse-server:24.8
-    container_name: WeKnora-langfuse-clickhouse
+    container_name: AiRAG-langfuse-clickhouse
     restart: unless-stopped
     user: "101:101"
     environment:
@@ -871,25 +806,22 @@ services:
       retries: 10
       start_period: 10s
     networks:
-      - WeKnora-network
+      - airag-network
     profiles:
       - langfuse
       - full
 
   langfuse-minio:
     image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
-    container_name: WeKnora-langfuse-minio
+    container_name: AiRAG-langfuse-minio
     restart: unless-stopped
     entrypoint: sh
-    # 启动前创建 `langfuse` 桶，Langfuse 开箱即用
     command: -c 'mkdir -p /data/langfuse && minio server --address ":9000" --console-address ":9001" /data'
     environment:
       MINIO_ROOT_USER: ${LANGFUSE_MINIO_USER:-langfuseminio}
       MINIO_ROOT_PASSWORD: ${LANGFUSE_MINIO_PASSWORD:-langfuseminiosecret}
     ports:
-      # 9100：S3 API（浏览器上传媒体时会直连此端口，必须对外暴露）
       - "${LANGFUSE_MINIO_S3_PORT:-9100}:9000"
-      # 9101：MinIO 控制台（可选，方便排障）
       - "${LANGFUSE_MINIO_CONSOLE_PORT:-9101}:9001"
     volumes:
       - langfuse_minio_data:/data
@@ -899,17 +831,16 @@ services:
       timeout: 10s
       retries: 5
     networks:
-      - WeKnora-network
+      - airag-network
     profiles:
       - langfuse
       - full
 
   langfuse-worker:
     image: langfuse/langfuse-worker:3
-    container_name: WeKnora-langfuse-worker
+    container_name: AiRAG-langfuse-worker
     restart: unless-stopped
     depends_on: &langfuse-depends-on
-      # 复用 WeKnora 已有的 postgres/redis，需要先完成 langfuse 数据库的创建
       langfuse-db-init:
         condition: service_completed_successfully
       redis:
@@ -918,10 +849,6 @@ services:
         condition: service_healthy
       langfuse-minio:
         condition: service_healthy
-    # 用 wrapper entrypoint：在容器启动时把 DB_PASSWORD / REDIS_PASSWORD 做 URL 编码，
-    # 避免 DB_PASSWORD 含 '@' / '#' 等字符导致 Prisma 无法解析 DATABASE_URL (P1013)。
-    # Langfuse 镜像基于 Node.js，直接用 node 的 encodeURIComponent，不引外部依赖。
-    # 注意：compose 覆盖 entrypoint 会清空镜像默认 CMD，因此在 wrapper 末尾写死 exec 的原始命令。
     entrypoint:
       - /bin/sh
       - -ec
@@ -935,15 +862,11 @@ services:
         unset _LF_DB_USER _LF_DB_PASSWORD _LF_REDIS_PASSWORD
         exec dumb-init -- ./worker/entrypoint.sh node worker/dist/index.js
     environment: &langfuse-env
-      # 原始凭证（未 URL 编码），由 entrypoint wrapper 读取并组装成 DATABASE_URL / REDIS_CONNECTION_STRING
       _LF_DB_USER: ${DB_USER}
       _LF_DB_PASSWORD: ${DB_PASSWORD}
       _LF_DB_NAME: ${LANGFUSE_DB_NAME:-langfuse}
       _LF_REDIS_PASSWORD: ${REDIS_PASSWORD}
       _LF_REDIS_DB: ${LANGFUSE_REDIS_DB:-1}
-      # SALT / ENCRYPTION_KEY 生产环境务必重新生成：
-      #   SALT: openssl rand -base64 32
-      #   ENCRYPTION_KEY: openssl rand -hex 32
       SALT: ${LANGFUSE_SALT:-weknora-langfuse-dev-salt-change-me}
       ENCRYPTION_KEY: ${LANGFUSE_ENCRYPTION_KEY:-0000000000000000000000000000000000000000000000000000000000000000}
       NEXTAUTH_URL: ${LANGFUSE_NEXTAUTH_URL:-http://localhost:3000}
@@ -966,24 +889,22 @@ services:
       LANGFUSE_S3_MEDIA_UPLOAD_REGION: auto
       LANGFUSE_S3_MEDIA_UPLOAD_ACCESS_KEY_ID: ${LANGFUSE_MINIO_USER:-langfuseminio}
       LANGFUSE_S3_MEDIA_UPLOAD_SECRET_ACCESS_KEY: ${LANGFUSE_MINIO_PASSWORD:-langfuseminiosecret}
-      # 媒体上传用的外部 endpoint（浏览器直连），默认指向宿主机映射的 9100 端口
       LANGFUSE_S3_MEDIA_UPLOAD_ENDPOINT: ${LANGFUSE_S3_MEDIA_UPLOAD_ENDPOINT:-http://localhost:9100}
       LANGFUSE_S3_MEDIA_UPLOAD_FORCE_PATH_STYLE: "true"
       LANGFUSE_S3_MEDIA_UPLOAD_PREFIX: media/
     networks:
-      - WeKnora-network
+      - airag-network
     profiles:
       - langfuse
       - full
 
   langfuse-web:
     image: langfuse/langfuse:3
-    container_name: WeKnora-langfuse-web
+    container_name: AiRAG-langfuse-web
     restart: unless-stopped
     depends_on: *langfuse-depends-on
     ports:
       - "${LANGFUSE_WEB_PORT:-3000}:3000"
-    # 同样走 wrapper entrypoint，末尾写死 web 的原始启动命令（见镜像 Dockerfile 的 CMD）
     entrypoint:
       - /bin/sh
       - -ec
@@ -1002,7 +923,6 @@ services:
         fi
     environment:
       <<: *langfuse-env
-      # 可选：首次启动时自动创建组织、项目和管理员（填了就不用在 UI 上手动注册）
       LANGFUSE_INIT_ORG_ID: ${LANGFUSE_INIT_ORG_ID:-}
       LANGFUSE_INIT_ORG_NAME: ${LANGFUSE_INIT_ORG_NAME:-}
       LANGFUSE_INIT_PROJECT_ID: ${LANGFUSE_INIT_PROJECT_ID:-}
@@ -1013,7 +933,7 @@ services:
       LANGFUSE_INIT_USER_NAME: ${LANGFUSE_INIT_USER_NAME:-}
       LANGFUSE_INIT_USER_PASSWORD: ${LANGFUSE_INIT_USER_PASSWORD:-}
     networks:
-      - WeKnora-network
+      - airag-network
     profiles:
       - langfuse
       - full
@@ -1021,47 +941,60 @@ services:
   mcp:
     build:
       context: ./mcp-server
-    container_name: WeKnora-mcp
+    container_name: AiRAG-mcp
     ports:
       - "${MCP_PORT:-8082}:8000"
     environment:
       - WEKNORA_BASE_URL=http://app:8080/api/v1
       - WEKNORA_API_KEY=${WEKNORA_API_KEY:-}
-      # HTTP/SSE 传输必填：mcp-server 启动时若缺少此项会拒绝启动（客户端以 Authorization: Bearer 携带）
       - MCP_SERVER_AUTH_TOKEN=${MCP_SERVER_AUTH_TOKEN:-}
-      # 调用 WeKnora REST 的读超时（秒，默认 300）
       - WEKNORA_CHAT_TIMEOUT=${WEKNORA_CHAT_TIMEOUT:-300}
-      # 是否校验 WeKnora 后端 TLS 证书（默认 true；自签证书可设 false）
       - WEKNORA_VERIFY_SSL=${WEKNORA_VERIFY_SSL:-true}
-      # 允许上传的目录白名单（逗号分隔；留空禁用文件上传工具）
       - MCP_ALLOWED_UPLOAD_DIRS=${MCP_ALLOWED_UPLOAD_DIRS:-}
     depends_on:
       app:
         condition: service_healthy
     networks:
-      - WeKnora-network
+      - airag-network
     restart: unless-stopped
     profiles:
       - full
 
 networks:
-  WeKnora-network:
+  airag-network:
+    name: airag-network
     driver: bridge
 
 volumes:
   postgres-data:
+    name: airag_postgres-data
   data-files:
+    name: airag_data-files
   docreader-tmp:
+    name: airag_docreader-tmp
   minio_data:
+    name: airag_minio_data
   neo4j-data:
+    name: airag_neo4j-data
   qdrant_data:
+    name: airag_qdrant_data
   milvus_data:
+    name: airag_milvus_data
   weaviate_data:
+    name: airag_weaviate_data
   doris_fe_meta:
+    name: airag_doris_fe_meta
   doris_fe_log:
+    name: airag_doris_fe_log
   doris_be_storage:
+    name: airag_doris_be_storage
   doris_be_log:
+    name: airag_doris_be_log
   langfuse_clickhouse_data:
+    name: airag_langfuse_clickhouse_data
   langfuse_clickhouse_logs:
+    name: airag_langfuse_clickhouse_logs
   langfuse_minio_data:
+    name: airag_langfuse_minio_data
   searxng_config:
+    name: airag_searxng_config
