@@ -17,7 +17,7 @@
 export type Edition = 'lite' | 'pro' | 'enterprise'
 
 /** 交付时改这一行：'lite' | 'pro' | 'enterprise' */
-export const CURRENT_EDITION: Edition = 'lite'
+export const CURRENT_EDITION: Edition = 'pro'
 
 // -------- 功能 key 定义 --------
 // 新增受控功能时：① 在这里加 key；② 在 FEATURE_MATRIX 里加对应一行；③ 在对应 section 映射表登记
@@ -80,7 +80,7 @@ const FEATURE_MATRIX: Record<FeatureKey, Record<Edition, boolean>> = {
   'settings.websearch':       { lite: true, pro: true,  enterprise: true  },  // 网络搜索（会出域，lite 不给）（添加搜索引擎设置多个搜索工具
 
   // --- 进阶（pro+）---
-  'settings.personalMemory':  { lite: false,  pro: true,  enterprise: true  },  // 我的记忆
+  'settings.personalMemory':  { lite: false, pro: true,  enterprise: true  },  // 我的记忆
   'settings.longTermMemory':  { lite: false, pro: true,  enterprise: true  },  // 长期记忆
 
   // --- 高级（仅 enterprise）---
@@ -110,11 +110,11 @@ const FEATURE_MATRIX: Record<FeatureKey, Record<Edition, boolean>> = {
 
   // --- 进阶（pro+）---
   'kb.multimodal': { lite: false, pro: true,  enterprise: true  },  // 图像处理
-  'kb.graph':      { lite: false, pro: true,  enterprise: true  },  // 知识图谱
+  'kb.asr':        { lite: false, pro: true, enterprise: true  },  // 音频处理
   'kb.share':      { lite: false, pro: true,  enterprise: true  },  // 共享管理
 
   // --- 高级（仅 enterprise）---
-  'kb.asr':        { lite: false, pro: false, enterprise: true  },  // 音频处理
+  'kb.graph':      { lite: false, pro: false,  enterprise: true  },  // 知识图谱
   'kb.datasource': { lite: false, pro: false, enterprise: true  },  // 数据源（拉外部数据）
 
   // ═══════════════ 编辑智能体 ═══════════════
