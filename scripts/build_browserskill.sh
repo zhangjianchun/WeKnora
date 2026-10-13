@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# 全局git参数兜底
+git config --global http.postBuffer 1048576000
+git config --global http.version HTTP/1.1
+git config --global http.lowSpeedLimit 1000
+git config --global http.lowSpeedTime 120
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 output_dir="${1:-$repo_root/artifacts/browserskill}"
@@ -32,16 +37,22 @@ output_dir="$(cd "$output_dir" && pwd)"
 build_dir="$(mktemp -d /tmp/weknora-bsk-build.XXXXXX)"
 trap 'rm -rf "$build_dir"' EXIT
 
-git clone --no-checkout https://ghproxy.net/https://github.com/Tencent/BrowserSkill.git "$build_dir/source"
+# 【修改点】git命令行携带网络参数 + ghproxy加速
+git -c http.postBuffer=1048576000 \
+    -c http.version=HTTP/1.1 \
+    -c http.lowSpeedLimit=1000 \
+    -c http.lowSpeedTime=120 \
+    clone --no-checkout https://ghproxy.net/https://github.com/Tencent/BrowserSkill.git "$build_dir/source"
+
 git -C "$build_dir/source" checkout --detach "$source_commit"
 (
   cd "$build_dir/source"
-  npx --yes pnpm@10.17.0 install --frozen-lockfile
+  # 【修改点】pnpm使用npmmirror淘宝源
+  npx --yes pnpm@10.17.0 install --frozen-lockfile --registry=https://registry.npmmirror.com
   npx --yes pnpm@10.17.0 ext:build:zip
 )
 cp "$build_dir/source/apps/extension/dist/browser-skillextension-${extension_version}-chrome.zip" "$output_dir/browser-skill-weknora-${extension_version}.zip"
 cp "$build_dir/source/LICENSE" "$output_dir/BrowserSkill-LICENSE"
-
 # Build the daemon from the same pinned source; upstream has not published a
 # matching CLI 0.3.1 binary.
 cargo_target_dir="${CARGO_TARGET_DIR:-$build_dir/target}"

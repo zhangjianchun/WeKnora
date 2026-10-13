@@ -2,7 +2,7 @@
 set -e
 
 VERSION="${1:-v0.1.0}"
-SRC="/mnt/e/zhangjianchun/WeKnora"
+SRC="$HOME/WeKnora"
 PKG="AiRAG-lite_${VERSION}_linux_amd64"
 OUT="$HOME/release"
 

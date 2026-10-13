@@ -1,51 +1,8 @@
-# ═══ Git ═══
+# Git
 .git/
 .github/
 
-# ═══ Python 虚拟环境 / 缓存 / 构建产物 ═══
-**/.venv/
-**/.venv_proto/
-**/__pycache__/
-**/*.pyc
-**/*.pyo
-docreader/build/
-docreader/dist/
-docreader/*.spec
-
-# ═══ Node / 前端 ═══
-**/node_modules/
-frontend/
-WeKnora-Chrome-Extension/
-
-# ═══ Go ═══
-**/vendor/
-
-# ═══ 构建产物 / 二进制 / 归档 ═══
-**/WeKnora-lite
-**/WeKnora-lite-*
-**/server
-**/*.tar
-**/*.tar.gz
-**/*.tgz
-**/*.zip
-**/*.tar.zst
-!packages/protoc-*.zip
-
-# ═══ 文档 ═══
-website-docs/
-docs/images/
-
-# ═══ 本地数据 / 日志 ═══
-data/
-logs/
-tmp/
-temp/
-backups/
-*.log
-*.pid
-
-# ═══ IDE ═══
-.idea/
+# IDE临时文件
 .vscode/
 .cursor/
 .claude/
@@ -53,13 +10,31 @@ backups/
 *.swo
 .DS_Store
 
-# ═══ 敏感文件 ═══
+# 环境变量与密钥
 .env
 .env.lite
 *.pem
 *.key
 *.crt
 
-# ═══ 本地测试脚本 ═══
+# 本地脚本
 configure-ollama.sh
 fix-docker.sh
+
+# Python虚拟环境
+**/.venv
+**/.venv/**
+
+node_modules
+*.tar
+*.tar.gz
+*.tar.zst
+data/
+logs/
+backups/
+dist
+build
+WeKnora-lite
+WeKnora-lite-*
+__pycache__
+*.pyc
