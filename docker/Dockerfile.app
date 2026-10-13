@@ -58,8 +58,12 @@ RUN --mount=type=cache,target=/go/pkg/mod go mod download
 COPY cmd/download cmd/download
 RUN go run cmd/download/duckdb/duckdb.go
 COPY . .
-RUN --mount=type=cache,target=/go/pkg/mod bash ./scripts/copy-licenses.sh /license-bundle
+# RUN --mount=type=cache,target=/go/pkg/mod bash ./scripts/copy-licenses.sh /license-bundle
 
+RUN --mount=type=cache,target=/go/pkg/mod \
+    GOPROXY=https://goproxy.cn,direct \
+    bash ./scripts/copy-licenses.sh /license-bundle
+    
 # Get version and commit info for build injection
 ARG VERSION_ARG
 ARG COMMIT_ID_ARG
@@ -129,13 +133,14 @@ RUN if [ -n "$APK_MIRROR_ARG" ]; then \
         gosu \
         ffmpeg && \
     python3 -m pip install --break-system-packages --upgrade pip setuptools wheel && \
-    mkdir -p /home/appuser/.local/bin && \
-    curl -LsSf https://astral.sh/uv/install.sh | CARGO_HOME=/home/appuser/.cargo UV_INSTALL_DIR=/home/appuser/.local/bin sh && \
-    chown -R appuser:appuser /home/appuser && \
-    ln -sf /home/appuser/.local/bin/uvx /usr/local/bin/uvx && \
-    chmod +x /usr/local/bin/uvx && \
+    # mkdir -p /home/appuser/.local/bin && \
+    # curl -LsSf https://mirror.ghproxy.com/https://astral.sh/uv/install.sh | CARGO_HOME=/home/appuser/.cargo UV_INSTALL_DIR=/home/appuser/.local/bin sh && \
+    # chown -R appuser:appuser /home/appuser && \
+    # ln -sf /home/appuser/.local/bin/uvx /usr/local/bin/uvx && \
+    # chmod +x /usr/local/bin/uvx && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
 
 # Create data directories and set permissions
 RUN mkdir -p /data/files && \

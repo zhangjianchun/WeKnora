@@ -99,7 +99,7 @@ const FEATURE_MATRIX: Record<FeatureKey, Record<Edition, boolean>> = {
   'settings.sandboxSecrets':       { lite: false, pro: false, enterprise: false  },  // 沙箱密钥（envvars）
   
   'settings.adminSystem':          { lite: true, pro: true, enterprise: true },  // 系统设置（超管专有）
-  'settings.adminModelCatalog':    { lite: false, pro: false, enterprise: false },  // 模型目录（bug + 超管专有）
+  'settings.adminModelCatalog':    { lite: true, pro: true, enterprise: true },  // 模型目录（超管专有）
   'settings.adminTaskQueue':       { lite: true, pro: true, enterprise: true },  // 任务队列（超管专有）
   'settings.adminApiKey':          { lite: false, pro: false, enterprise: true },  // 平台 API Key（超管专有）
   'settings.adminAuditLog':        { lite: true, pro: true, enterprise: true },  // 审计日志（超管专有）
