@@ -73,7 +73,7 @@ if [ ! -f node_modules/vite/bin/vite.js ]; then
 fi
 
 echo ">> 构建前端 (lite)..."
-NODE_OPTIONS=--max-old-space-size=6144 VITE_EDITION=lite npm run build
+NODE_OPTIONS=--max-old-space-size=6144 VITE_EDITION=lite VITE_AppVersion=$VERSION npm run build
 
 [ -f dist/index.html ] || die "前端构建失败"
 

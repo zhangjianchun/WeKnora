@@ -6,13 +6,6 @@ OUT="$HOME/release"
 REGISTRY="ghcr.io/zhangjianchun"
 EDITIONS=("lite" "pro" "enterprise")
 
-case "${EDITION}" in
-    lite)       EDITION_CN="基础版" ;;
-    pro)        EDITION_CN="专业版" ;;
-    enterprise) EDITION_CN="旗舰版" ;;
-    *)          EDITION_CN="${EDITION}" ;;
-esac
-
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 source "${SCRIPT_DIR}/pack-common.lib.sh"
 
@@ -22,11 +15,19 @@ echo "=== AiRAG Online Packager ==="
 mkdir -p "$OUT"
 
 for EDITION in "${EDITIONS[@]}"; do
+    # !!! 每轮循环内部重新赋值中文版本名
+    case "${EDITION}" in
+        lite)       EDITION_CN="基础版" ;;
+        pro)        EDITION_CN="专业版" ;;
+        enterprise) EDITION_CN="旗舰版" ;;
+        *)          EDITION_CN="${EDITION}" ;;
+    esac
+
     PKG="AiRAG-online-${EDITION}_${VERSION}"
     PKG_DIR="$OUT/$PKG"
     echo ""
     echo "════════════════════════════════════════════"
-    echo "  打包 ${EDITION} 在线版"
+    echo "  打包 ${EDITION} 在线版【${EDITION_CN}】"
     echo "════════════════════════════════════════════"
     rm -rf "$PKG_DIR"
     mkdir -p "$PKG_DIR"
@@ -71,7 +72,6 @@ for EDITION in "${EDITIONS[@]}"; do
     TEMPLATE_backup_sh > backup.sh
     TEMPLATE_restore_sh > restore.sh
     TEMPLATE_reset_password_sh > reset-password.sh
-
 cat > test.sh <<'TEST_EOF'
 #!/bin/bash
 set -eo pipefail
@@ -89,7 +89,6 @@ docker compose version >/dev/null 2>&1 && ok "Docker Compose" || bad "Docker Com
 echo -e "通过 $PASS / 警告 $WARN / 失败 $FAIL"
 [ "$FAIL" -eq 0 ] && echo "🎉 一切正常"
 TEST_EOF
-
     chmod +x *.sh
 
     # 调用公共库PS1生成函数，直接输出文件，**不再使用bash变量**
@@ -105,9 +104,10 @@ TEST_EOF
     PS1_reset_password "reset-password.ps1"
     PS1_test_online "test.ps1"
 
+# !!! 去掉 'README_EOF' 的单引号，需要展开${EDITION_CN}；内部所有$和`全部转义 \$ \`
 cat > README.md <<README_EOF
 # AiRAG 在线版部署手册（${EDITION_CN}）
-> **版本**：${EDITION_CN}
+> **版本**：${VERSION}
 > **分发方式**：在线版（镜像从 GHCR 拉取，需要网络）
 ## 快速开始
 ### Linux / macOS
@@ -137,10 +137,11 @@ notepad .env            # 填 DB_PASSWORD、REDIS_PASSWORD、SYSTEM_SIGNING_KEY�
 | ./disable-neo4j.sh | .\disable-neo4j.ps1 | 关闭知识图谱 |
 | ./test.sh | .\test.ps1 | 自检 |
 ## 网络要求
-本版本需要能访问 GHCR（\`ghcr.io\`）。
+本版本需要能访问 GHCR(\`ghcr.io\`)。
 如部署环境**完全离线**，请使用 \`AiRAG‑full\` 离线版。
 ## 知识图谱（可选）
-默认关闭。启用：\`./enable‑neo4j.sh\` 或 \`.\enable‑neo4j.ps1\`
+默认关闭。
+> 切换知识图谱：执行 enable‑neo4j.sh / enable‑neo4j.ps1，脚本会停止全部服务，再手动运行start脚本生效。
 ## 常见问题
 - **端口 80 被占用**：改 .env 里 FRONTEND_PORT=8088
 - **忘记密码**：运行 reset‑password 脚本
@@ -151,7 +152,7 @@ README_EOF
     find . -name "*.sh" -exec sed -i 's/\r$//' {} \;
     find . \( -name "*.yml" -o -name "*.yaml" -o -name "*.md" -o -name ".env.example" \) -exec sed -i 's/\r$//' {} \; 2>/dev/null || true
     find . -name "*.sh" -exec sed -i '1s/^\xef\xbb\xbf//' {} \;
-    
+
     cd "$OUT"
     rm -f "${PKG}.tar.gz" "${PKG}.tar.gz.sha256"
     tar czf "${PKG}.tar.gz" "$PKG"
@@ -160,3 +161,4 @@ README_EOF
     rm -rf "$PKG_DIR"
 done
 echo "🎉 在线版打包完成"
+

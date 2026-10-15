@@ -8,6 +8,7 @@
                 <sup v-else-if="CURRENT_EDITION=='lite'" class="lite-badge">基础版</sup>
                 <sup v-else-if="CURRENT_EDITION=='pro'" class="lite-badge">专业版</sup>
                 <sup v-else-if="CURRENT_EDITION=='enterprise'" class="lite-badge">旗舰版</sup>
+                <span v-if="APP_VERSION" class="lite-badge app-version-text">{{ APP_VERSION }}</span>
             </div>
             <div class="logo_actions">
                 <t-tooltip placement="bottom">
@@ -225,7 +226,7 @@ import { listAllIMChannels } from '@/api/agent/index';
 import SessionSidebarRow from './SessionSidebarRow.vue';
 import PanelResizeHandle from './PanelResizeHandle.vue';
 import { SIDEBAR_COLLAPSED_WIDTH, SIDEBAR_MIN_WIDTH, SIDEBAR_MAX_WIDTH } from '@/utils/sidebarWidth';
-import { CURRENT_EDITION } from '@/config/edition'
+import { CURRENT_EDITION, APP_VERSION } from '@/config/edition'
 import {
     clearSession,
     removeSession,
