@@ -6,12 +6,6 @@ OUT="$HOME/release"
 REGISTRY="ghcr.io/zhangjianchun"
 EDITIONS=("lite" "pro" "enterprise")
 
-case "${EDITION}" in
-    lite)       EDITION_CN="基础版" ;;
-    pro)        EDITION_CN="专业版" ;;
-    enterprise) EDITION_CN="旗舰版" ;;
-    *)          EDITION_CN="${EDITION}" ;;
-esac
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 source "${SCRIPT_DIR}/pack-common.lib.sh"
@@ -22,6 +16,15 @@ echo "=== AiRAG Full Offline Packager ==="
 mkdir -p "$OUT"
 
 for EDITION in "${EDITIONS[@]}"; do
+
+    case "${EDITION}" in
+        lite)       EDITION_CN="基础版" ;;
+        pro)        EDITION_CN="专业版" ;;
+        enterprise) EDITION_CN="旗舰版" ;;
+        *)          EDITION_CN="${EDITION}" ;;
+    esac
+
+
     PKG="AiRAG-full-${EDITION}_${VERSION}"
     PKG_DIR="$OUT/$PKG"
     echo ""
@@ -101,8 +104,8 @@ for EDITION in "${EDITIONS[@]}"; do
 
     # 离线包README
 cat > README.md <<README_EOF
-# AiRAG 离线版部署手册（${EDITION}）
-> **版本**：${EDITION}
+# AiRAG 离线版部署手册（${EDITION_CN}）
+> **版本**：${VERSION}
 > **分发方式**：离线版（镜像内置在images目录，不需要网络）
 ## 快速开始
 ### Linux / macOS

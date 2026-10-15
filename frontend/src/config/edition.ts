@@ -242,3 +242,23 @@ export function isSectionEnabledByEdition(
 
 /** 当前版本名（调试用） */
 export const EDITION_NAME = EDITION
+
+
+
+// 版本号
+
+export type AppVersion = string;
+// 兜底默认版本
+const DEFAULT_APP_VERSION = 'v0.1.0';
+
+function resoAppVersion(): AppVersion {
+  // 构建时通过 VITE_AppVersion 环境变量覆盖版本号
+  const envAppVersion = import.meta.env.VITE_AppVersion as string | undefined
+  if (envAppVersion) {
+    return envAppVersion
+  }
+  return DEFAULT_APP_VERSION
+}
+
+// ✅导出，供外部 import
+export const APP_VERSION: AppVersion = resoAppVersion();
