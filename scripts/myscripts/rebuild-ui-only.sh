@@ -90,6 +90,7 @@ for EDITION in lite pro enterprise; do
     echo ">> 构建 airag-ui-${EDITION}:${VERSION}..."
     docker build \
         --build-arg VITE_EDITION=${EDITION} \
+        --build-arg VITE_AppVersion=${VERSION} \
         -t "${REGISTRY}/airag-ui-${EDITION}:${VERSION}" \
         -f frontend/Dockerfile frontend/
     echo "  ✅ airag-ui-${EDITION}:${VERSION}"
