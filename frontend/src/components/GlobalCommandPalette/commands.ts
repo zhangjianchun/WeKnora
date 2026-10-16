@@ -38,7 +38,9 @@ function assistantName(t: Composer['t']): string {
 export function buildCommands(ctx: CommandContext): CmdkCommand[] {
   const { router, t, close } = ctx
   return [
-    {
+/* 
+助手问它时 400 先隐藏
+   {
       id: 'open-assistant',
       label: t('commandPalette.quick.assistant', { name: assistantName(t) }),
       icon: 'compass',
@@ -47,7 +49,7 @@ export function buildCommands(ctx: CommandContext): CmdkCommand[] {
         close()
         useAssistantStore().open()
       },
-    },
+    },*/
     {
       id: 'new-chat',
       label: t('commandPalette.quick.newChat'),

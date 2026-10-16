@@ -11,12 +11,13 @@
                 <span v-if="APP_VERSION" class="lite-badge app-version-text">{{ APP_VERSION }}</span>
             </div>
             <div class="logo_actions">
-                <t-tooltip v-if="assistantStore.entry === 'sidebar'" :content="assistantName" placement="bottom">
+                <!-- 助手问它时 400 先隐藏 -->
+<!--                 <t-tooltip v-if="assistantStore.entry === 'sidebar'" :content="assistantName" placement="bottom">
                     <div class="header-icon-btn" :class="{ 'is-active': assistantStore.visible }"
                         :aria-label="assistantName" @click="assistantStore.toggle()">
                         <t-icon name="compass" size="18px" />
                     </div>
-                </t-tooltip>
+                </t-tooltip> -->
                 <t-tooltip placement="bottom">
                     <template #content>
                         <span class="cmdk-tip">

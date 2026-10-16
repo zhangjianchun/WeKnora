@@ -384,7 +384,7 @@ const navItems = computed(() => {
     { key: 'system-audit-log', icon: 'history', label: t('system.globalSettings.audit.tabLabel') },
     { key: 'userprofile', icon: 'user', label: t('userProfile.title') },
     { key: 'mymemory', icon: 'bookmark', label: t('memorySettings.title') },
-    { key: 'assistant', icon: 'compass', label: t('assistantSettings.title') },
+    // { key: 'assistant', icon: 'compass', label: t('assistantSettings.title') },// 助手问它时 400 先隐藏
     { key: 'envvars', icon: 'key', label: envNavLabel() },
     { key: 'tenant', icon: 'user-circle', label: t('settings.tenantInfo') },
     { key: 'members', icon: 'usergroup', label: t('tenantMember.title') },

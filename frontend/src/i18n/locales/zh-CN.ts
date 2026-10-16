@@ -2124,7 +2124,7 @@ export default {
     askUser: '向用户提问'
   },
   assistant: {
-    title: 'WeKnora 助手',
+    title: 'Ai RAG 助手',
     newConversation: '新对话',
     history: '历史对话',
     untitledConversation: '未命名对话',
@@ -2138,7 +2138,7 @@ export default {
     },
     welcomeTitle: '有什么可以帮你？',
     agentWelcomeDesc: '可以检查这个智能体的配置、调整模型或查看它能检索的知识库。',
-    welcomeDesc: '我可以解答 WeKnora 的用法，也可以查看和处理你空间里的文档解析、知识库动态和 Wiki 问题，还能帮你创建和配置智能体。改动前是否先请你确认，由输入框下方的权限等级决定。',
+    welcomeDesc: '我可以解答 Ai RAG 的用法，也可以查看和处理你空间里的文档解析、知识库动态和 Wiki 问题，还能帮你创建和配置智能体。改动前是否先请你确认，由输入框下方的权限等级决定。',
     startFailed: '启动助手失败，请重试',
     askAboutDocument: '问 {name}',
     access: {
@@ -2175,7 +2175,7 @@ export default {
       documentSummary: '总结一下这个文档',
       failedDocuments: '这个知识库有哪些解析失败的文档？',
       recentActivity: '这个知识库最近有哪些变动？',
-      formats: 'WeKnora 支持哪些文档格式？',
+      formats: 'Ai RAG 支持哪些文档格式？',
       createWiki: '怎样创建 Wiki 知识库？',
       agents: '我有哪些智能体？分别用的什么模型？'
     }
@@ -5039,7 +5039,7 @@ export default {
       systemActor: '系统触发',
       actorWithAPIKey: '{actor} · API Key · {name}',
       actorAPIKey: 'API Key · {name}',
-      viaAssistant: '经 WeKnora 助手',
+      viaAssistant: '经 Ai RAG 助手',
       knowledgeBase: '知识库',
       countItems: '共 {count} 项',
       titleWithCount: '{title} 等 {count} 项',
