@@ -528,7 +528,7 @@ import {
   type AuditOutcome,
 } from '@/api/tenant/audit-log'
 
-const { t, tm, locale } = useI18n()
+const { t, te, tm, locale } = useI18n()
 const authStore = useAuthStore()
 
 /** 悬停层限制在视口内，内容由内部滚动 */
@@ -1105,6 +1105,45 @@ function auditOutcomeTheme(o: AuditOutcome): 'success' | 'danger' | 'default' {
 }
 
 // i18n 键名含点号（rbac.member_added）。用 t(path) 会按路径拆开解析，
+// —— 审计日志字段/枚举值中英对照（与 SystemAuditLog.vue 保持一致）——
+// 原值一律来自后端，绝不在前端修改；仅在展示层做「中文 (原始值)」映射。
+// 枚举值优先走审计专用短标签 system.globalSettings.audit.valueLabels.<ctx>.<value>，
+// 回退 system.globalSettings.enumLabels.<ctx>.<value>，最后回退原始值，保证不报错。
+function formatAuditFieldLabel(rawKey: string): string {
+  const path = `system.globalSettings.keyLabels.${rawKey}`
+  return te(path) ? `${t(path)} (${rawKey})` : rawKey
+}
+
+function formatAuditValueLabel(contextKey: string | undefined, rawValue: string): string {
+  const candidates = [
+    contextKey ? `system.globalSettings.audit.valueLabels.${contextKey}.${rawValue}` : null,
+    contextKey ? `system.globalSettings.enumLabels.${contextKey}.${rawValue}` : null,
+  ].filter((p): p is string => !!p)
+  for (const path of candidates) {
+    if (te(path)) return `${t(path)} (${rawValue})`
+  }
+  return rawValue
+}
+
+// 渲染单条变更值：布尔值走 boolean 专用标签，枚举/字符串走字段级标签，其余原样。
+function formatAuditScalar(value: unknown, contextKey: string | undefined): string {
+  if (value === null || value === undefined) {
+    return t('system.globalSettings.audit.target.valueNull')
+  }
+  if (typeof value === 'boolean' || value === 'true' || value === 'false') {
+    const raw = String(value)
+    const path = `system.globalSettings.audit.valueLabels.boolean.${raw}`
+    return te(path) ? `${t(path)} (${raw})` : raw
+  }
+  if (typeof value === 'number') return String(value)
+  if (typeof value === 'string') return formatAuditValueLabel(contextKey, value)
+  try {
+    return JSON.stringify(value)
+  } catch {
+    return String(value)
+  }
+}
+
 // 无法命中 tenantMember.audit.action['rbac.*'] — 必须用 tm + 字面量键。
 function formatAuditAction(action: AuditAction): string {
   return auditActionLabel({ tm }, AUDIT_ACTION_I18N_ROOTS.tenantMember, action)
@@ -1146,15 +1185,17 @@ function auditTargetDiff(row: AuditLog): string {
   const d = auditDetailsObject(row)
   if (!d) return ''
   if (row.action === 'rbac.member_role_changed') {
-    if (d.old_role && d.new_role) return `${d.old_role} → ${d.new_role}`
+    if (d.old_role && d.new_role) {
+      return `${formatAuditScalar(d.old_role, 'user.role')} → ${formatAuditScalar(d.new_role, 'user.role')}`
+    }
   }
   if (row.action === 'rbac.access_denied') {
     if (typeof d.required_role === 'string') {
-      return t('tenantMember.audit.requiredRole', { role: d.required_role })
+      return t('tenantMember.audit.requiredRole', { role: formatAuditScalar(d.required_role, 'user.role') })
     }
   }
   if (row.action === 'rbac.invitation_sent' || row.action === 'rbac.invitation_revoked') {
-    if (typeof d.role === 'string') return String(d.role)
+    if (typeof d.role === 'string') return formatAuditScalar(d.role, 'user.role')
   }
   return ''
 }
