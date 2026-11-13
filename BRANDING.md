@@ -161,4 +161,4 @@ i18n 文件只改 value，不改 key。
 - 助手入口仍按门控全版本可用，只是不再引用官方文档；将来换成自有文档后，在 `.env` 设 `AIRAG_ENABLE_PRODUCT_DOCS=1` 恢复。
 - 清掉 3 处官方文档外链：`ModelEditorDialog.vue`（compat 文档）、`SandboxConfigEditorDrawer.vue`（集群搭建指南，两处）、`SystemInfo.vue`（迁移排障文档 + 上游 GitHub issue 上报）。微信开发者文档、E2B 控制台等第三方服务商链接保留；迁移失败仍显示完整错误详情。
 - 修复：`.env.lite.example` 覆盖物此前被 `.gitignore` 的 `.*` 规则忽略、从未入库，导致 lite 包会拿到官方模板；已加例外规则。
-- **已知残留**：`CliIntegrationLanding.vue` 的 CLI 安装命令仍含 `git clone https://github.com/Tencent/WeKnora.git` 与 `weknora` 命令名。整页品牌化需先确定自有 CLI 分发渠道，属产品决策，暂未改。
+- **CLI 集成**：`settings.integrationCli` 属 edition.ts「彻底隐藏」组，全版本 `false`，导航过滤与深链守卫都已封住，客户进不去该页。`CliIntegrationLanding.vue` 的安装命令已把官方仓库地址换成自有仓库 `https://github.com/zhangjianchun/WeKnora.git`，避免打包产物里残留官方地址；`cd WeKnora/cli` 目录名与 `weknora` 二进制名保持不变（与 fork 仓库一致）。若以后要放开入口，需先确认自有仓库对客户可访问并补齐配套 CLI 说明。
