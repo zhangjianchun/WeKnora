@@ -450,7 +450,7 @@
                                 })
                                 }}</span>
                               </div>
-                              <AssistantButton v-if="props.canEdit && isFeatureEnabled('nav.assistant')"
+                              <AssistantButton v-if="props.canEdit && isAssistantEnabled()"
                                 :label="$t('knowledgeEditor.wikiBrowser.issueFixBtn')" @click="triggerAutoFix" />
                             </div>
                             <div class="wiki-issue-popup-list">
@@ -482,7 +482,7 @@
                                         }) }}
                                     </span>
                                     <div v-if="props.canEdit" class="wiki-issue-popup-actions">
-                                      <AssistantButton v-if="isFeatureEnabled('nav.assistant')"
+                                      <AssistantButton v-if="isAssistantEnabled()"
                                         :label="$t('knowledgeEditor.wikiBrowser.issueFixSingle')"
                                         @click="triggerFixIssue(issue)" />
                                       <span class="wiki-issue-popup-action"
@@ -542,7 +542,7 @@
                         </t-button>
                       </template>
                       <template v-else>
-                        <AssistantActionsButton v-if="isFeatureEnabled('nav.assistant')" icon-only
+                        <AssistantActionsButton v-if="isAssistantEnabled()" icon-only
                           :label="$t('assistant.actions.readContent')" :actions="readingAssistantActions" />
                         <t-tooltip v-if="props.canEdit" :content="$t('knowledgeEditor.wikiBrowser.editBtn')"
                           placement="top">
@@ -831,7 +831,7 @@ import { resolveWikiBacklinkTitle } from './wikiBacklinkTitles'
 import { buildGraphLayout, graphNodeRadius, stepGraphLayout, visibleGraphLabels, graphPointBounds, initialGraphViewport, graphClusterOutline, graphLandmarkTitle, type GraphBounds, type GraphCluster } from './wikiGraphLayout'
 import { getKnowledgeDetails } from '@/api/knowledge-base'
 import { useAssistantStore } from '@/stores/assistant'
-import { isFeatureEnabled } from '@/config/edition'
+import { isAssistantEnabled } from '@/config/edition'
 import AssistantButton from '@/components/assistant/AssistantButton.vue'
 import AssistantActionsButton from '@/components/assistant/AssistantActionsButton.vue'
 import { useAssistantPageContext } from '@/composables/useAssistantPageContext'

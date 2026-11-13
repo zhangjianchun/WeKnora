@@ -11,7 +11,7 @@
                 <span v-if="APP_VERSION" class="lite-badge app-version-text">{{ APP_VERSION }}</span>
             </div>
             <div class="logo_actions">
-                <t-tooltip v-if="isFeatureEnabled('nav.assistant') && assistantStore.entry === 'sidebar'" :content="assistantName" placement="bottom">
+                <t-tooltip v-if="isAssistantEnabled() && assistantStore.entry === 'sidebar'" :content="assistantName" placement="bottom">
                     <AssistantButton data-guide="assistant-entry" icon-only :icon-size="18" :label="assistantName"
                         :active="assistantStore.visible" @click="assistantStore.toggle()" />
                 </t-tooltip>
@@ -85,7 +85,7 @@
                         </div>
                     </div>
                 </t-tooltip>
-                <t-tooltip v-if="isFeatureEnabled('nav.assistant') && assistantStore.entry === 'sidebar'" :content="assistantName" placement="right">
+                <t-tooltip v-if="isAssistantEnabled() && assistantStore.entry === 'sidebar'" :content="assistantName" placement="right">
                     <AssistantButton data-guide="assistant-entry" class="assistant-sidebar-entry" icon-only :icon-size="18"
                         :label="assistantName" :active="assistantStore.visible" @click="assistantStore.toggle()" />
                 </t-tooltip>
@@ -235,7 +235,7 @@ import { listAllIMChannels } from '@/api/agent/index';
 import SessionSidebarRow from './SessionSidebarRow.vue';
 import PanelResizeHandle from './PanelResizeHandle.vue';
 import { SIDEBAR_COLLAPSED_WIDTH, SIDEBAR_MIN_WIDTH, SIDEBAR_MAX_WIDTH } from '@/utils/sidebarWidth';
-import { CURRENT_EDITION, APP_VERSION, isFeatureEnabled } from '@/config/edition'
+import { CURRENT_EDITION, APP_VERSION, isAssistantEnabled } from '@/config/edition'
 import {
     clearSession,
     removeSession,

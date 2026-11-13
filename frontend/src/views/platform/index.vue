@@ -4,8 +4,9 @@
         <div v-if="isRouterAlive" class="platform-route-outlet">
             <RouterView />
         </div>
-        <!-- 助手由 edition.ts 的 nav.assistant 统一门控：后端为旧版镜像时整体
-             不挂载，浮动入口、选中气泡与页面填充提示都不会唤起不存在的 API -->
+        <!-- 助手由 edition.ts 的助手总开关（nav.assistant）统一门控：
+             关闭时整体不挂载，Logo 旁入口、设置页「助手」、浮动入口、
+             选中气泡与页面填充提示都不会出现，也不会唤起助手 API -->
         <template v-if="assistantEnabled">
             <AssistantPanel />
             <AssistantLauncher />
@@ -43,12 +44,12 @@ import { getKnowledgeBaseById } from '@/api/knowledge-base/index'
 import { MessagePlugin } from 'tdesign-vue-next'
 import { useI18n } from 'vue-i18n'
 import { collectDroppedFiles } from './collectDroppedFiles'
-import { isFeatureEnabled } from '@/config/edition'
+import { isAssistantEnabled } from '@/config/edition'
 import { markAssistantEntryGuideDone } from '@/config/contextualGuides'
 
-// 0.9.0 助手/自动化依赖新后端接口；定制版后端沿用旧版官方镜像，先整体关闭。
+// 助手总开关关闭时，所有长在助手之上的 UI（入口、设置、自动化、引导）一并隐藏。
 // 标记助手引导为已完成，避免它阻塞依赖 isGlobalUserGuideDone() 的页面级引导。
-const assistantEnabled = isFeatureEnabled('nav.assistant')
+const assistantEnabled = isAssistantEnabled()
 if (!assistantEnabled) markAssistantEntryGuideDone()
 
 const route = useRoute();

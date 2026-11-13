@@ -10,6 +10,11 @@
  * 想把某个功能移到某个版本时：
  *   只改 FEATURE_MATRIX 里对应那一行即可。
  *
+ * 想整体下线/恢复 0.9.0 助手：
+ *   只改 'nav.assistant' 这一行（助手总开关）。关掉后，Logo 旁入口、
+ *   设置里的「助手」、自动化导航、多智能体协作、执行审批等全部一起隐藏；
+ *   打开后，上述功能按各自在 FEATURE_MATRIX 里的分档恢复。
+ *
  * 注意：纯前端 UI 门控，不做后端鉴权。
  * ============================================================
  */
@@ -82,10 +87,11 @@ const FEATURE_MATRIX: Record<FeatureKey, Record<Edition, boolean>> = {
   'nav.toolbox':     { lite: false, pro: false, enterprise: false },  // 工具箱（沙箱 bug 隐藏）
   'nav.artifact':    { lite: false, pro: false, enterprise: false },  // 产物（隐藏）
   'nav.sharedSpace': { lite: false, pro: true,  enterprise: true  },  // 共享空间（pro+）
-  // --- 0.9.0 新增：后端仍用旧版官方镜像，助手/自动化 API 不存在（400 / 404）---
-  // 换成 0.9.0 后端镜像后，把本文件里这几组 0.9.0 开关改回 true 即可整体恢复。
-  'nav.assistant':   { lite: false, pro: false, enterprise: false },  // Logo 旁 / 折叠态助手入口
-  'nav.automations': { lite: false, pro: false, enterprise: false },  // 自动化导航
+  // --- 0.9.0 新增：'nav.assistant' 是助手总开关 ---
+  // 下面所有 0.9.0 助手派生功能（含设置页「助手」）都会在总开关关闭时一并隐藏，
+  // 不需要逐行改；总开关打开后，再按各自这一行的分档决定是否显示。
+  'nav.assistant':   { lite: false, pro: false, enterprise: false },  // 助手总开关：Logo 旁 / 折叠态入口
+  'nav.automations': { lite: true,  pro: true,  enterprise: true  },  // 自动化导航（受总开关约束）
 
   // ═══════════════ 系统设置 ═══════════════
   // --- 基础（所有版本）---
@@ -93,7 +99,7 @@ const FEATURE_MATRIX: Record<FeatureKey, Record<Edition, boolean>> = {
   'settings.members':         { lite: true, pro: true,  enterprise: true  },  // 成员管理
   'settings.websearch':       { lite: true, pro: true,  enterprise: true  },  // 网络搜索（会出域，lite 不给）（添加搜索引擎设置多个搜索工具
   // --- 0.9.0 新增 ---
-  'settings.assistant':       { lite: false, pro: false, enterprise: false },  // 助手设置（依赖助手后端，随 nav.assistant 一起关）
+  'settings.assistant':       { lite: true,  pro: true,  enterprise: true  },  // 设置页「助手」（受助手总开关约束）
   'settings.defaults':        { lite: true,  pro: true,  enterprise: true  },  // 空间默认模型（与助手无关，保留）
 
   // --- 进阶（pro+）---
@@ -151,10 +157,10 @@ const FEATURE_MATRIX: Record<FeatureKey, Record<Edition, boolean>> = {
   // --- 彻底隐藏 ---
   'agent.skills':       { lite: false, pro: false, enterprise: false },  // 技能（沙箱 bug）
 
-  // ═══════════════ 0.9.0 助手之上的能力（依赖助手后端，随总开关关闭）═══════════════
-  'assistant.collaboration': { lite: false, pro: false, enterprise: false },  // 多智能体协作
-  'assistant.automations':   { lite: false, pro: false, enterprise: false },  // 自动化任务
-  'assistant.approvals':     { lite: false, pro: false, enterprise: false },  // 执行权限与审批
+  // ═══════════════ 0.9.0 助手之上的能力（受助手总开关约束）═══════════════
+  'assistant.collaboration': { lite: true,  pro: true,  enterprise: true  },  // 多智能体协作
+  'assistant.automations':   { lite: true,  pro: true,  enterprise: true  },  // 自动化任务
+  'assistant.approvals':     { lite: true,  pro: true,  enterprise: true  },  // 执行权限与审批
 }
 
 // -------- 消费方 section key → feature key 映射 --------
@@ -250,9 +256,29 @@ const EDITION: Edition = resolveEdition()
 
 // -------- 通用判断 --------
 
-/** 判断功能 key 在当前版本是否开放 */
+/**
+ * 依赖助手总开关的功能 key。
+ * 这些 key 即使各自在矩阵里为 true，只要 'nav.assistant' 关闭就一律不显示，
+ * 保证「关掉 Logo 旁入口 = 设置里的助手、自动化、协作、审批也全部消失」。
+ * 新增长在助手之上的入口时，记得登记到这里。
+ */
+const ASSISTANT_DEPENDENT_KEYS: ReadonlySet<FeatureKey> = new Set<FeatureKey>([
+  'settings.assistant',
+  'nav.automations',
+  'assistant.collaboration',
+  'assistant.automations',
+  'assistant.approvals',
+])
+
+/** 助手总开关：全站助手相关 UI 的唯一开关（对应 FEATURE_MATRIX['nav.assistant']） */
+export function isAssistantEnabled(): boolean {
+  return FEATURE_MATRIX['nav.assistant']?.[EDITION] ?? false
+}
+
+/** 判断功能 key 在当前版本是否开放（助手派生功能还会额外受总开关约束） */
 export function isFeatureEnabled(key: FeatureKey): boolean {
-  return FEATURE_MATRIX[key]?.[EDITION] ?? false
+  if (!(FEATURE_MATRIX[key]?.[EDITION] ?? false)) return false
+  return ASSISTANT_DEPENDENT_KEYS.has(key) ? isAssistantEnabled() : true
 }
 
 /**
@@ -262,10 +288,10 @@ export function isFeatureEnabled(key: FeatureKey): boolean {
  * 不要用这些开关去包裹卡片渲染；服务端仍会按自身权限模型发起审批。
  */
 export const ASSISTANT_CAPABILITIES = {
-  // 三项都依赖助手总开关：助手关掉后，长在它之上的能力一并关闭
-  collaboration: () => isFeatureEnabled('nav.assistant') && isFeatureEnabled('assistant.collaboration'),
-  automations: () => isFeatureEnabled('nav.assistant') && isFeatureEnabled('assistant.automations'),
-  approvals: () => isFeatureEnabled('nav.assistant') && isFeatureEnabled('assistant.approvals'),
+  // 三项都登记在 ASSISTANT_DEPENDENT_KEYS，自动跟随助手总开关
+  collaboration: () => isFeatureEnabled('assistant.collaboration'),
+  automations: () => isFeatureEnabled('assistant.automations'),
+  approvals: () => isFeatureEnabled('assistant.approvals'),
 } as const
 
 /** 判断某个 section/path key 在当前版本是否开放（不在表里的放行） */

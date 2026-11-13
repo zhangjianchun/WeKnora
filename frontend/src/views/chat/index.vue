@@ -134,7 +134,7 @@
                                     :follow-up-loading="Boolean(session.suggestionLoading && !session.suggestionSet?.questions?.length)"
                                     :can-fork="!embeddedMode && forkAffordanceOf(session.id).canFork"
                                     :can-rewind="canRewindMessage(session.id)"
-                                    :can-ask-assistant="!embeddedMode && isFeatureEnabled('nav.assistant')"
+                                    :can-ask-assistant="!embeddedMode && isAssistantEnabled()"
                                     @fork="handleFork"
                                     @rewind="handleRewind"
                                     @ask-assistant="handleAskAssistant"
@@ -259,7 +259,7 @@ import { listSteerSession, promoteSteerSession, removeSteerSession, steerSession
 import { persistedAssistantId, previewSteerMessage, discardSteerPreview, reconcileSteerMessageId } from '@/utils/steerStreamFork';
 import { resumeSuspendedRunKey } from '@/utils/suspendedRun';
 import { useMenuStore } from '@/stores/menu';
-import { isFeatureEnabled } from '@/config/edition';
+import { isAssistantEnabled } from '@/config/edition';
 import { useSettingsStore } from '@/stores/settings';
 import { useBrowserConnectionStore } from '@/stores/browserConnection';
 import { MessagePlugin } from 'tdesign-vue-next';

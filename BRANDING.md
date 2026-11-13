@@ -143,11 +143,12 @@ i18n 文件只改 value，不改 key。
 
 ### 版本门控（edition.ts）
 
-- 新增 key（**全部版本 `true`**）：`nav.assistant`、`nav.automations`、`settings.assistant`、`settings.defaults`、`assistant.collaboration`、`assistant.automations`、`assistant.approvals`。
-- 已接线：Logo 旁 / 折叠态助手按钮（`isFeatureEnabled('nav.assistant')`）、自动化导航与路由守卫、两项设置的 section 过滤、执行权限选择器（`ASSISTANT_CAPABILITIES.approvals()`）、自动化新建按钮（`...automations()`）。
-- `ASSISTANT_CAPABILITIES` 三项都依赖 `nav.assistant` 总开关：关掉助手，长在它之上的能力一并关闭。
+- 新增 key：`nav.assistant`（**助手总开关**）、`nav.automations`、`settings.assistant`、`settings.defaults`、`assistant.collaboration`、`assistant.automations`、`assistant.approvals`。
+- **单一总开关**：`edition.ts` 导出 `isAssistantEnabled()`（读 `FEATURE_MATRIX['nav.assistant']`），`ASSISTANT_DEPENDENT_KEYS` 登记了 `settings.assistant` / `nav.automations` / `assistant.*` 等派生功能。`isFeatureEnabled()` 对这些 key 额外要求总开关为 `true`，所以把 `nav.assistant` 一行改成 `false` 时，Logo 旁入口、设置页「助手」、自动化导航、多智能体协作、执行审批、助手引导弹框会一起消失；改成 `true` 则按各自矩阵分档整体恢复。**不用再逐行改 6 个开关。**
+- 已接线：Logo 旁 / 折叠态助手按钮、设置 section 过滤与深链守卫、自动化导航与路由守卫、执行权限选择器（`ASSISTANT_CAPABILITIES.approvals()`）、自动化新建按钮（`...automations()`）、聊天「问助手」、Wiki / 文档助手动作按钮；组件统一调用 `isAssistantEnabled()`。
+- `settings.defaults`（空间默认模型）与助手无关，不受总开关影响。
 - **刻意不接线**：聊天流里的审批卡片 / 协作进度卡片——隐藏会让运行中的任务卡在待审批，`assistant.collaboration` / `assistant.approvals` 只作能力预留，以后要关某个能力请在「入口」处调用。
-- 0.8.3 时因 400 报错被注释的助手入口与设置项已恢复，改由门控控制；若再出问题，把 `nav.assistant` 一行改成 `false` 即可。
+- 0.8.3 时因 400 报错被注释的助手入口与设置项已恢复，改由门控控制。
 
 ### 升级注意
 
@@ -167,4 +168,4 @@ i18n 文件只改 value，不改 key。
 - 实测组合：前端 `npm run dev` + 旧版官方后端镜像。助手提问报「流式连接失败: HTTP 400」、自动化报「404 page not found」——`/api/v1/agent-chat`、`/api/v1/automations` 在旧后端不存在，前端无法修补。
 - `edition.ts` 把 6 个 0.9.0 新功能开关设为全版本 `false`；`platform/index.vue` 用 `v-if` 整体不挂载 `AssistantPanel` / `AssistantLauncher` / `AssistantPageBridge`。菜单两处入口、命令面板（原本已注释）、聊天「问助手」、Wiki / 文档 / 知识库的助手动作按钮全部收口。
 - 助手「新功能」引导弹框（含 `v0.9.0 新功能` 字样）不再弹出：`NewUserGuide.vue` 增加 `assistantGuideEnabled` prop（默认 `true`，上游单测行为不变），由 `platform/index.vue` 按开关传入；同时调 `markAssistantEntryGuideDone()`，避免该引导标记缺失把页面级情境引导一起卡住。6 种语言的 `assistantEntryGuide.stepOf` 已去掉上游版本号。
-- 后端镜像升级到 0.9.0 后，把 `edition.ts` 对应几行改回 `true` 即可整体恢复，门控接线都还在。
+- 后端镜像升级到 0.9.0 后，只需把 `edition.ts` 的 `nav.assistant` 一行改回 `true` 即可整体恢复（见「版本门控」的单开关说明），门控接线都还在。
