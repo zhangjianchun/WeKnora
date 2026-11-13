@@ -26,6 +26,9 @@ export type FeatureKey =
     | 'nav.toolbox'                    // 工具箱
     | 'nav.artifact'                   // 产物
     | 'nav.sharedSpace'                // 共享空间
+    // 0.9.0 新增：Logo 旁助手入口、自动化导航
+    | 'nav.assistant'
+    | 'nav.automations'
     // ==================== 系统设置 ====================
     | 'settings.personalMemory'        // 我的记忆
     | 'settings.members'               // 成员管理
@@ -48,6 +51,9 @@ export type FeatureKey =
     | 'settings.adminTaskQueue'        // 任务队列
     | 'settings.adminApiKey'           // 平台 API Key
     | 'settings.adminAuditLog'         // 审计日志
+    // 0.9.0 新增：助手设置、空间默认模型
+    | 'settings.assistant'
+    | 'settings.defaults'
     // ==================== 知识库设置 ====================
     | 'kb.multimodal'                  // 知识库 · 图像处理
     | 'kb.asr'                         // 知识库 · 音频处理
@@ -64,6 +70,10 @@ export type FeatureKey =
     | 'agent.multimodal'               // 智能体 · 附件上传
     | 'agent.skills'                   // 智能体 · 技能
     | 'agent.share'                    // 智能体 · 发布集成
+    // ==================== 0.9.0 助手之上的能力 ====================
+    | 'assistant.collaboration'        // 多智能体协作
+    | 'assistant.automations'          // 自动化任务
+    | 'assistant.approvals'            // 执行权限与审批
 
 // -------- 版本矩阵：每个功能一行，想移动功能只改这一行 --------
 // true = 该版本显示，false = 该版本隐藏
@@ -72,12 +82,18 @@ const FEATURE_MATRIX: Record<FeatureKey, Record<Edition, boolean>> = {
   'nav.toolbox':     { lite: false, pro: false, enterprise: false },  // 工具箱（沙箱 bug 隐藏）
   'nav.artifact':    { lite: false, pro: false, enterprise: false },  // 产物（隐藏）
   'nav.sharedSpace': { lite: false, pro: true,  enterprise: true  },  // 共享空间（pro+）
+  // --- 0.9.0 新增，先全部版本可用 ---
+  'nav.assistant':   { lite: true,  pro: true,  enterprise: true  },  // Logo 旁 / 折叠态助手入口
+  'nav.automations': { lite: true,  pro: true,  enterprise: true  },  // 自动化导航
 
   // ═══════════════ 系统设置 ═══════════════
   // --- 基础（所有版本）---
   'settings.ollama':          { lite: true,  pro: true,  enterprise: true  },  // Ollama（本地部署核心）
   'settings.members':         { lite: true, pro: true,  enterprise: true  },  // 成员管理
   'settings.websearch':       { lite: true, pro: true,  enterprise: true  },  // 网络搜索（会出域，lite 不给）（添加搜索引擎设置多个搜索工具
+  // --- 0.9.0 新增，先全部版本可用 ---
+  'settings.assistant':       { lite: true, pro: true,  enterprise: true  },  // 助手设置
+  'settings.defaults':        { lite: true, pro: true,  enterprise: true  },  // 空间默认模型
 
   // --- 进阶（pro+）---
   'settings.personalMemory':  { lite: false, pro: true,  enterprise: true  },  // 我的记忆
@@ -133,6 +149,11 @@ const FEATURE_MATRIX: Record<FeatureKey, Record<Edition, boolean>> = {
 
   // --- 彻底隐藏 ---
   'agent.skills':       { lite: false, pro: false, enterprise: false },  // 技能（沙箱 bug）
+
+  // ═══════════════ 0.9.0 助手之上的能力，先全部版本可用 ═══════════════
+  'assistant.collaboration': { lite: true, pro: true, enterprise: true },  // 多智能体协作
+  'assistant.automations':   { lite: true, pro: true, enterprise: true },  // 自动化任务
+  'assistant.approvals':     { lite: true, pro: true, enterprise: true },  // 执行权限与审批
 }
 
 // -------- 消费方 section key → feature key 映射 --------
@@ -147,6 +168,7 @@ export const NAV_PATH_FEATURE: Record<string, FeatureKey> = {
   toolbox: 'nav.toolbox',
   artifacts: 'nav.artifact',
   organizations: 'nav.sharedSpace',
+  automations: 'nav.automations',
 }
 
 /**
@@ -176,6 +198,8 @@ export const SETTINGS_SECTION_FEATURE: Record<string, FeatureKey> = {
   'runtime-queues': 'settings.adminTaskQueue',
   'platform-api-keys': 'settings.adminApiKey',
   'system-audit-log': 'settings.adminAuditLog',
+  assistant: 'settings.assistant',
+  defaults: 'settings.defaults',
 }
 
 /**
@@ -229,6 +253,19 @@ const EDITION: Edition = resolveEdition()
 export function isFeatureEnabled(key: FeatureKey): boolean {
   return FEATURE_MATRIX[key]?.[EDITION] ?? false
 }
+
+/**
+ * 0.9.0 助手之上的能力，默认全版本可用；以后要下线，只改 FEATURE_MATRIX 对应行。
+ * 仅用于控制「入口」：发起协作、创建自动化、执行权限选择器。
+ * 注意：聊天流里的审批卡片 / 协作进度是运行态 UI，隐藏会让任务卡在待审批，
+ * 不要用这些开关去包裹卡片渲染；服务端仍会按自身权限模型发起审批。
+ */
+export const ASSISTANT_CAPABILITIES = {
+  // 三项都依赖助手总开关：助手关掉后，长在它之上的能力一并关闭
+  collaboration: () => isFeatureEnabled('nav.assistant') && isFeatureEnabled('assistant.collaboration'),
+  automations: () => isFeatureEnabled('nav.assistant') && isFeatureEnabled('assistant.automations'),
+  approvals: () => isFeatureEnabled('nav.assistant') && isFeatureEnabled('assistant.approvals'),
+} as const
 
 /** 判断某个 section/path key 在当前版本是否开放（不在表里的放行） */
 export function isSectionEnabledByEdition(

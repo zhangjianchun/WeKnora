@@ -15,7 +15,7 @@
       :title="$t('chat.requestInfoTitle')"
       v-if="0"
     >
-      <t-icon name="info-circle" />
+      <ChatActionIcon name="info-circle" />
     </t-button>
     <template #content>
       <div class="chat-request-card" @click.stop>
@@ -48,6 +48,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import ChatActionIcon from './ChatActionIcon.vue';
 import { useI18n } from 'vue-i18n';
 import {
   buildChatRequestDebugPayload,

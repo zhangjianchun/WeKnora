@@ -4,12 +4,28 @@
       <h2>{{ t('graphSettings.title') }}</h2>
       <p class="section-description">{{ t('graphSettings.description') }}</p>
     </div>
-    <div v-if="!isGraphDatabaseEnabled" class="graph-disabled">
-      <span class="graph-disabled-icon"><t-icon name="chart-bubble" /></span>
+    <div
+      v-if="graphAvailability !== 'enabled'"
+      class="graph-disabled"
+      :class="{ 'graph-disabled--loading': graphAvailability === 'loading' }"
+      :role="graphAvailability === 'loading' ? 'status' : 'alert'"
+    >
+      <span class="graph-disabled-icon">
+        <t-icon :name="graphAvailability === 'loading' ? 'info-circle' : 'chart-bubble'" />
+      </span>
       <div class="graph-disabled-text">
-        <p>{{ t('graphSettings.disabledWarning') }}</p>
+        <p>{{ graphAvailabilityMessage }}</p>
       </div>
-      <!-- 如何启用知识图谱？ -->
+      <t-button
+        v-if="graphAvailability === 'error'"
+        size="small"
+        theme="primary"
+        variant="outline"
+        @click="loadSystemInfo(true)"
+      >
+        {{ t('common.retry') }}
+      </t-button>
+      <!-- 品牌定制：移除指向官方文档的「如何启用知识图谱」入口 -->
     </div>
 
     <div v-if="isGraphDatabaseEnabled" class="settings-group">
@@ -311,7 +327,6 @@ import { useI18n } from 'vue-i18n'
 import { extractTextRelations, fabriText, fabriTag, type Node, type Relation } from '@/api/initialization'
 import { useEditorResourcesStore } from '@/stores/editorResources'
 import { useAuthStore } from '@/stores/auth'
-import { docsUrl } from '@/utils/docsUrl'
 
 const { t } = useI18n()
 const authStore = useAuthStore()
@@ -364,12 +379,12 @@ const tagFabring = ref(false)
 const textFabring = ref(false)
 const extracting = ref(false)
 
-// 系统信息
-const systemInfo = ref<any>(null)
-
-// 计算图数据库是否启用
-const isGraphDatabaseEnabled = computed(() => {
-  return systemInfo.value?.graph_database_engine && systemInfo.value.graph_database_engine !== 'Not Enabled'
+const graphAvailability = ref<'loading' | 'enabled' | 'disabled' | 'error'>('loading')
+const isGraphDatabaseEnabled = computed(() => graphAvailability.value === 'enabled')
+const graphAvailabilityMessage = computed(() => {
+  if (graphAvailability.value === 'loading') return t('graphSettings.checkingAvailability')
+  if (graphAvailability.value === 'error') return t('graphSettings.checkAvailabilityFailed')
+  return t('graphSettings.disabledWarning')
 })
 
 // Watch for prop changes
@@ -562,22 +577,21 @@ const clearExtractExample = () => {
 
 const editorResources = useEditorResourcesStore()
 
-// 加载系统信息
+let systemInfoRequest = 0
 const loadSystemInfo = async (force = false) => {
+  const request = ++systemInfoRequest
+  graphAvailability.value = 'loading'
   try {
     await editorResources.ensureSystemInfo(force)
-    systemInfo.value = editorResources.systemInfo
+    if (request !== systemInfoRequest) return
+    const engine = editorResources.systemInfo?.graph_database_engine
+    const name = typeof engine === 'string' ? engine.trim() : ''
+    graphAvailability.value = !name ? 'error' : name === 'Not Enabled' ? 'disabled' : 'enabled'
   } catch (error: any) {
+    if (request !== systemInfoRequest) return
+    graphAvailability.value = 'error'
     console.error('Failed to load system info:', error)
   }
-}
-
-const graphGuideUrl =
-  import.meta.env.VITE_KG_GUIDE_URL || docsUrl('knowledgeGraph')
-
-// Open guide documentation to show how to enable graph database
-const handleOpenGraphGuide = () => {
-  window.open(graphGuideUrl, '_blank', 'noopener')
 }
 
 // 初始化
@@ -642,6 +656,11 @@ onMounted(async () => {
     line-height: 1.5;
     color: var(--td-text-color-secondary);
   }
+}
+
+.graph-disabled--loading .graph-disabled-icon {
+  color: var(--td-brand-color);
+  background: var(--td-brand-color-light);
 }
 
 .settings-group {

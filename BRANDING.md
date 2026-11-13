@@ -126,3 +126,30 @@ i18n 文件只改 value，不改 key。
   ```
   （或 `--build` 整个应用）
 - 浏览器端有旧资源缓存时，提示客户 Ctrl+Shift+R 强刷。
+
+## 九、v0.9.0 同步（2026-11-13）
+
+### 同步方式
+
+- `main` 快进到官方 tag `v0.9.0`（`f17ee8a8`，2026-10-29），`branding` 以 merge 合入；升级前备份标签 `backup/branding-pre-0.9.0`。
+- 合并前先做「预清理」提交，把冲突从 10 个压到 5 个（i18n 归一化 + 还原无实际定制的上游文件）。
+
+### 定制结构变化
+
+- 新增 `branding-overrides/`：中文提示词、`config.yaml`、Dockerfile 国内加速、docreader 单文件打包、env 模板等非前端定制，改为**交付期覆盖**，分支上的上游文件保持干净。详见 `branding-overrides/README.md`；`scripts/myscripts/package-*.sh` 已自动调用 `apply.sh`。
+- `en-US.ts` / `ja-JP.ts` 的 4 空格整文件重排已归一化为上游风格，相对官方的 diff 从约 8000 行降到数十行。
+- 语言包扩展到 **6 种**：zh-CN / **zh-TW（补做）** / en-US / ja-JP / ko-KR / ru-RU。0.9.0 每种新增约 1180 行（助手、自动化、审批、空间默认模型），其中 WeKnora 自称已按品牌规则替换。
+- 白名单新增：i18n key 名 `searchWeKnoraDocs` / `readWeKnoraDoc` **不得替换**（首次批量替换曾误伤，已修）。其余保留项见第四节。
+
+### 版本门控（edition.ts）
+
+- 新增 key（**全部版本 `true`**）：`nav.assistant`、`nav.automations`、`settings.assistant`、`settings.defaults`、`assistant.collaboration`、`assistant.automations`、`assistant.approvals`。
+- 已接线：Logo 旁 / 折叠态助手按钮（`isFeatureEnabled('nav.assistant')`）、自动化导航与路由守卫、两项设置的 section 过滤、执行权限选择器（`ASSISTANT_CAPABILITIES.approvals()`）、自动化新建按钮（`...automations()`）。
+- `ASSISTANT_CAPABILITIES` 三项都依赖 `nav.assistant` 总开关：关掉助手，长在它之上的能力一并关闭。
+- **刻意不接线**：聊天流里的审批卡片 / 协作进度卡片——隐藏会让运行中的任务卡在待审批，`assistant.collaboration` / `assistant.approvals` 只作能力预留，以后要关某个能力请在「入口」处调用。
+- 0.8.3 时因 400 报错被注释的助手入口与设置项已恢复，改由门控控制；若再出问题，把 `nav.assistant` 一行改成 `false` 即可。
+
+### 升级注意
+
+- 官方升级须知：先备份 DB / 文件存储 / 部署配置；PostgreSQL `000119–000134`、SQLite `000037–000051` 迁移；新变量 `WEKNORA_LOG_FORMAT`、`WEKNORA_SANDBOX_USER_ALLOCATION`（需 Redis、全副本升级后才可开）、`WEKNORA_TENANT_DEFAULT_STORAGE_QUOTA_MB`；显式 `docker compose pull`（只 `up -d` 会复用旧镜像）。
+- 定制版镜像版本由 `AIRAG_VERSION` 控制，官方 `WEKNORA_VERSION` 不被定制 compose 读取；两者关系写在 `branding-overrides/env/.env.example`。

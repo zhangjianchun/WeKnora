@@ -145,6 +145,12 @@ const router = createRouter({
           meta: { requiresInit: true, requiresAuth: true, requiredEditionPath: 'toolbox' }
         },
         {
+          path: "automations/:automationId?",
+          name: "automationList",
+          component: () => import("../views/automation/AutomationList.vue"),
+          meta: { requiresInit: true, requiresAuth: true, requiredEditionPath: 'automations' }
+        },
+        {
           path: "agents",
           name: "agentList",
           component: () => import("../views/agent/AgentList.vue"),

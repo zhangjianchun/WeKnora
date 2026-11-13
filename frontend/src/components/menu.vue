@@ -11,13 +11,10 @@
                 <span v-if="APP_VERSION" class="lite-badge app-version-text">{{ APP_VERSION }}</span>
             </div>
             <div class="logo_actions">
-                <!-- 助手问它时 400 先隐藏 -->
-<!--                 <t-tooltip v-if="assistantStore.entry === 'sidebar'" :content="assistantName" placement="bottom">
-                    <div class="header-icon-btn" :class="{ 'is-active': assistantStore.visible }"
-                        :aria-label="assistantName" @click="assistantStore.toggle()">
-                        <t-icon name="compass" size="18px" />
-                    </div>
-                </t-tooltip> -->
+                <t-tooltip v-if="isFeatureEnabled('nav.assistant') && assistantStore.entry === 'sidebar'" :content="assistantName" placement="bottom">
+                    <AssistantButton data-guide="assistant-entry" icon-only :icon-size="18" :label="assistantName"
+                        :active="assistantStore.visible" @click="assistantStore.toggle()" />
+                </t-tooltip>
                 <t-tooltip placement="bottom">
                     <template #content>
                         <span class="cmdk-tip">
@@ -88,15 +85,9 @@
                         </div>
                     </div>
                 </t-tooltip>
-                <t-tooltip v-if="assistantStore.entry === 'sidebar'" :content="assistantName" placement="right">
-                    <div class="menu_item menu_item--cmdk" :class="{ 'menu_item_active': assistantStore.visible }"
-                        :aria-label="assistantName" @click="assistantStore.toggle()">
-                        <div class="menu_item-box">
-                            <div class="menu_icon">
-                                <t-icon name="compass" size="18px" />
-                            </div>
-                        </div>
-                    </div>
+                <t-tooltip v-if="isFeatureEnabled('nav.assistant') && assistantStore.entry === 'sidebar'" :content="assistantName" placement="right">
+                    <AssistantButton data-guide="assistant-entry" class="assistant-sidebar-entry" icon-only :icon-size="18"
+                        :label="assistantName" :active="assistantStore.visible" @click="assistantStore.toggle()" />
                 </t-tooltip>
             </div>
             <div class="menu_box" :class="{ 'menu_box--sticky': item.children && !uiStore.sidebarCollapsed }"
@@ -108,7 +99,7 @@
                         <div class="menu_item-box">
                             <div class="menu_icon" :class="`menu_icon--${item.icon}`">
                                 <img class="icon"
-                                    :src="getImgSrc(item.icon == 'zhishiku' ? knowledgeIcon : item.icon == 'agent' ? agentIcon : item.icon == 'artifact' ? artifactIcon : item.icon == 'toolbox' ? toolboxIcon : item.icon == 'organization' ? organizationIcon : item.icon == 'logout' ? logoutIcon : item.icon == 'setting' ? settingIcon : prefixIcon)"
+                                    :src="getImgSrc(item.icon == 'zhishiku' ? knowledgeIcon : item.icon == 'agent' ? agentIcon : item.icon == 'artifact' ? artifactIcon : item.icon == 'automation' ? automationIcon : item.icon == 'toolbox' ? toolboxIcon : item.icon == 'organization' ? organizationIcon : item.icon == 'logout' ? logoutIcon : item.icon == 'setting' ? settingIcon : prefixIcon)"
                                     alt="">
                             </div>
                             <template v-if="!uiStore.sidebarCollapsed">
@@ -244,7 +235,7 @@ import { listAllIMChannels } from '@/api/agent/index';
 import SessionSidebarRow from './SessionSidebarRow.vue';
 import PanelResizeHandle from './PanelResizeHandle.vue';
 import { SIDEBAR_COLLAPSED_WIDTH, SIDEBAR_MIN_WIDTH, SIDEBAR_MAX_WIDTH } from '@/utils/sidebarWidth';
-import { CURRENT_EDITION, APP_VERSION } from '@/config/edition'
+import { CURRENT_EDITION, APP_VERSION, isFeatureEnabled } from '@/config/edition'
 import {
     clearSession,
     removeSession,
@@ -297,6 +288,7 @@ import { useOrganizationStore } from '@/stores/organization';
 import { useUIStore } from '@/stores/ui';
 import { useCommandPaletteStore } from '@/stores/commandPalette';
 import { useAssistantStore } from '@/stores/assistant';
+import AssistantButton from '@/components/assistant/AssistantButton.vue';
 import { MessagePlugin, DialogPlugin, Icon as TIcon } from "tdesign-vue-next";
 import UserMenu from '@/components/UserMenu.vue';
 import TenantSelector from '@/components/TenantSelector.vue';
@@ -476,6 +468,8 @@ const isMenuItemActive = (itemPath: string): boolean => {
             return currentRoute === 'toolbox';
         case 'artifacts':
             return currentRoute === 'artifactLibrary';
+        case 'automations':
+            return currentRoute === 'automationList';
         case 'organizations':
             return currentRoute === 'organizationList';
         case 'creatChat':
@@ -504,7 +498,7 @@ const getIconActiveState = (itemPath: string) => {
 };
 
 // 分离上下两部分菜单（使用 visibleMenuArr 以便 lite 模式过滤 logout）
-const TOP_MENU_PATHS = new Set(['creatChat', 'knowledge-bases', 'artifacts', 'agents', 'toolbox', 'organizations']);
+const TOP_MENU_PATHS = new Set(['creatChat', 'knowledge-bases', 'artifacts', 'agents', 'automations', 'toolbox', 'organizations']);
 
 const topMenuItems = computed<MenuItem[]>(() => {
     return (visibleMenuArr.value as unknown as MenuItem[]).filter((item: MenuItem) => TOP_MENU_PATHS.has(item.path));
@@ -1149,6 +1143,7 @@ let settingIcon = ref('setting.svg');
 let agentIcon = ref('agent.svg');
 let artifactIcon = ref('artifact.svg');
 let toolboxIcon = ref('toolbox.svg');
+let automationIcon = ref('automation.svg');
 let organizationIcon = ref('organization.svg');
 let pathPrefix = ref(route.name)
 const getIcon = (path: string) => {
@@ -1170,6 +1165,7 @@ const getIcon = (path: string) => {
     artifactIcon.value = artifactsActiveState ? 'artifact-green.svg' : 'artifact.svg';
 
     toolboxIcon.value = route.name === 'toolbox' ? 'toolbox-green.svg' : 'toolbox.svg';
+    automationIcon.value = route.name === 'automationList' ? 'automation-green.svg' : 'automation.svg';
 
     // 组织图标：只在组织页面显示绿色
     organizationIcon.value = organizationsActiveState ? 'organization-green.svg' : 'organization.svg';
@@ -1351,7 +1347,6 @@ const resizeSidebar = (delta: number, keyboard: boolean) => {
         .menu_bottom {
             align-items: center;
         }
-
         .menu_top {
             margin-right: 0;
             padding-right: 0;
@@ -1842,6 +1837,13 @@ const resizeSidebar = (delta: number, keyboard: boolean) => {
     align-items: center;
     gap: 2px;
     flex-shrink: 0;
+}
+
+.aside_box--collapsed .assistant-sidebar-entry {
+    display: flex;
+    width: 32px;
+    height: 32px;
+    margin: 0 auto 6px;
 }
 
 .header-icon-btn {
