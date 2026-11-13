@@ -4458,6 +4458,27 @@ export default {
         actorRole: {
           system_admin: 'Системный администратор'
         },
+        valueLabels: {
+          boolean: {
+            true: 'Включено',
+            false: 'Отключено'
+          },
+          'auth.registration_mode': {
+            invite_only: 'Только по приглашению',
+            self_serve: 'Самообслуживание',
+            invite_register: 'Регистрация по приглашению'
+          },
+          'user.role': {
+            viewer: 'Наблюдатель',
+            contributor: 'Редактор',
+            admin: 'Администратор',
+            owner: 'Владелец'
+          },
+          'auth.default_tenant_mode': {
+            create_personal: 'Создать личное пространство',
+            tenantless: 'Не создавать пространство'
+          }
+        },
         errors: {
           generic: 'Не удалось загрузить журнал аудита'
         }
@@ -4665,6 +4686,9 @@ export default {
           registration_mode: 'Режим регистрации',
           default_tenant_mode: 'Создание пространства по умолчанию',
           complex_password_enabled: 'Включить сложные пароли'
+        },
+        user: {
+          role: 'Роль участника'
         }
       },
       runtime: {

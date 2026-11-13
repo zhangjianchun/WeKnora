@@ -4460,6 +4460,27 @@ export default {
         actorRole: {
           system_admin: '系統管理員'
         },
+        valueLabels: {
+          boolean: {
+            true: '開啟',
+            false: '關閉'
+          },
+          'auth.registration_mode': {
+            invite_only: '僅限邀請',
+            self_serve: '開放自助註冊',
+            invite_register: '僅限邀請註冊'
+          },
+          'user.role': {
+            viewer: '唯讀成員',
+            contributor: '編輯成員',
+            admin: '管理員',
+            owner: '擁有者'
+          },
+          'auth.default_tenant_mode': {
+            create_personal: '自動建立個人空間',
+            tenantless: '不自動建立空間'
+          }
+        },
         errors: {
           generic: '載入稽核日誌失敗'
         }
@@ -4667,6 +4688,9 @@ export default {
           registration_mode: '註冊模式',
           default_tenant_mode: '註冊預設空間策略',
           complex_password_enabled: '啟用複雜密碼'
+        },
+        user: {
+          role: '成員角色'
         }
       },
       runtime: {

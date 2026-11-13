@@ -4460,6 +4460,27 @@ export default {
         actorRole: {
           system_admin: '系统管理员'
         },
+        valueLabels: {
+          boolean: {
+            true: '开启',
+            false: '关闭'
+          },
+          'auth.registration_mode': {
+            invite_only: '仅限邀请',
+            self_serve: '开放自助注册',
+            invite_register: '仅限邀请注册'
+          },
+          'user.role': {
+            viewer: '只读成员',
+            contributor: '编辑成员',
+            admin: '管理员',
+            owner: '所有者'
+          },
+          'auth.default_tenant_mode': {
+            create_personal: '自动创建个人空间',
+            tenantless: '不自动创建空间'
+          }
+        },
         errors: {
           generic: '加载审计日志失败'
         }
@@ -4667,6 +4688,9 @@ export default {
           registration_mode: '注册模式',
           default_tenant_mode: '注册默认空间策略',
           complex_password_enabled: '启用复杂密码'
+        },
+        user: {
+          role: '成员角色'
         }
       },
       runtime: {

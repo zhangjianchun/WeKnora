@@ -76,6 +76,7 @@ const EXTRA_PREFIXES = [
   'system.globalSettings.enumLabels.',
   'system.globalSettings.audit.action.',
   'system.globalSettings.audit.actorRole.',
+  'system.globalSettings.audit.valueLabels.',
   'knowledgeEditor.activity.detailFields.',
   'knowledgeEditor.activity.detailValues.',
   'knowledgeEditor.activity.outcomes.',

@@ -293,6 +293,45 @@ function auditActorRoleLabel(role: string): string {
   return role
 }
 
+// 审计日志里后端返回的原始 key / 枚举值，统一做「中文 (原始值)」对照展示：
+// 字段名走 system.globalSettings.keyLabels.<key>（与系统设置页同一套字典）；
+// 枚举值优先走审计专用短标签 system.globalSettings.audit.valueLabels.<ctx>.<value>，
+// 回退到系统设置的 enumLabels.<ctx>.<value>，最后回退原始值，保证不报错。
+function formatAuditFieldLabel(rawKey: string): string {
+  const path = `system.globalSettings.keyLabels.${rawKey}`
+  return te(path) ? `${t(path)} (${rawKey})` : rawKey
+}
+
+function formatAuditValueLabel(contextKey: string | undefined, rawValue: string): string {
+  const candidates = [
+    contextKey ? `system.globalSettings.audit.valueLabels.${contextKey}.${rawValue}` : null,
+    contextKey ? `system.globalSettings.enumLabels.${contextKey}.${rawValue}` : null,
+  ].filter((p): p is string => !!p)
+  for (const path of candidates) {
+    if (te(path)) return `${t(path)} (${rawValue})`
+  }
+  return rawValue
+}
+
+// 渲染单条变更值：布尔值走 boolean 专用标签，枚举/字符串走字段级标签，其余原样。
+function formatAuditScalar(value: unknown, contextKey: string | undefined): string {
+  if (value === null || value === undefined) {
+    return t('system.globalSettings.audit.target.valueNull')
+  }
+  if (typeof value === 'boolean' || value === 'true' || value === 'false') {
+    const raw = String(value)
+    const path = `system.globalSettings.audit.valueLabels.boolean.${raw}`
+    return te(path) ? `${t(path)} (${raw})` : raw
+  }
+  if (typeof value === 'number') return String(value)
+  if (typeof value === 'string') return formatAuditValueLabel(contextKey, value)
+  try {
+    return JSON.stringify(value)
+  } catch {
+    return String(value)
+  }
+}
+
 function auditDetailsObject(row: AuditLog): Record<string, unknown> | null {
   if (row.details && typeof row.details === 'object') {
     return row.details as Record<string, unknown>
@@ -306,7 +345,9 @@ function auditTargetKey(row: AuditLog): string {
     if (row.target_type === 'tenant_storage_quota') {
       return t('system.globalSettings.audit.target.bulkQuota')
     }
-    if (details && typeof details.key === 'string' && details.key) return details.key
+    if (details && typeof details.key === 'string' && details.key) {
+      return formatAuditFieldLabel(details.key)
+    }
     return row.target_id || row.target_type || ''
   }
   if (
@@ -358,6 +399,14 @@ function auditTargetDiff(row: AuditLog): string {
     }
     return formatSettingDiff(details)
   }
+  if (row.action === 'rbac.member_role_changed') {
+    const oldRole = typeof details.old_role === 'string' ? details.old_role : null
+    const newRole = typeof details.new_role === 'string' ? details.new_role : null
+    if (oldRole !== null && newRole !== null) {
+      return `${formatAuditScalar(oldRole, 'user.role')} → ${formatAuditScalar(newRole, 'user.role')}`
+    }
+    return ''
+  }
   if (row.action === 'system.admin_promoted' && typeof details.idempotent === 'boolean') {
     if (details.idempotent === true) {
       return t('system.globalSettings.audit.target.promoteIdempotent')
@@ -371,29 +420,22 @@ function auditTargetDiff(row: AuditLog): string {
     return ''
   }
   if (row.action === 'rbac.access_denied' && typeof details.required_role === 'string') {
-    return t('system.globalSettings.audit.target.requiredRole', { role: details.required_role })
+    // required_role 也是角色枚举，一并走 user.role 字典做中英对照。
+    return t('system.globalSettings.audit.target.requiredRole', {
+      role: formatAuditScalar(details.required_role, 'user.role'),
+    })
   }
   return ''
 }
 
 const SETTING_DIFF_MAX_LEN = 80
 function formatSettingDiff(details: Record<string, unknown>): string {
-  const fmt = (v: unknown): string => {
-    if (v === null || v === undefined) {
-      return t('system.globalSettings.audit.target.valueNull')
-    }
-    if (typeof v === 'string') return v
-    if (typeof v === 'number' || typeof v === 'boolean') return String(v)
-    try {
-      return JSON.stringify(v)
-    } catch {
-      return String(v)
-    }
-  }
+  // 用字段名 (details.key) 作为枚举值的上下文，渲染「中文 (原始值)」对照。
+  const contextKey = typeof details.key === 'string' ? details.key : undefined
   const truncate = (s: string): string =>
     s.length > SETTING_DIFF_MAX_LEN ? s.slice(0, SETTING_DIFF_MAX_LEN - 1) + '…' : s
-  const oldStr = truncate(fmt(details.old_value))
-  const newStr = truncate(fmt(details.new_value))
+  const oldStr = truncate(formatAuditScalar(details.old_value, contextKey))
+  const newStr = truncate(formatAuditScalar(details.new_value, contextKey))
   if (oldStr === newStr) return ''
   return `${oldStr} → ${newStr}`
 }

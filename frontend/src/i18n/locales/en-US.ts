@@ -5028,6 +5028,9 @@ export default {
           default_tenant_mode: 'Default workspace provisioning',
           complex_password_enabled: 'Require complex password'
         },
+        user: {
+          role: 'Member role'
+        },
         ssrf: {
           whitelist: 'SSRF protection allowlist'
         },
@@ -5242,6 +5245,27 @@ export default {
         },
         actorRole: {
           system_admin: 'System Admin'
+        },
+        valueLabels: {
+          boolean: {
+            true: 'Enabled',
+            false: 'Disabled'
+          },
+          'auth.registration_mode': {
+            invite_only: 'Invite only',
+            self_serve: 'Self-service',
+            invite_register: 'Invitation registration'
+          },
+          'user.role': {
+            viewer: 'Viewer',
+            contributor: 'Editor',
+            admin: 'Admin',
+            owner: 'Owner'
+          },
+          'auth.default_tenant_mode': {
+            create_personal: 'Create personal workspace',
+            tenantless: 'Do not create a workspace'
+          }
         },
         columns: {
           time: 'Time',

@@ -4458,6 +4458,27 @@ export default {
         actorRole: {
           system_admin: '시스템 관리자'
         },
+        valueLabels: {
+          boolean: {
+            true: '사용',
+            false: '사용 안 함'
+          },
+          'auth.registration_mode': {
+            invite_only: '초대 전용',
+            self_serve: '셀프 서비스',
+            invite_register: '초대 가입'
+          },
+          'user.role': {
+            viewer: '뷰어',
+            contributor: '편집자',
+            admin: '관리자',
+            owner: '소유자'
+          },
+          'auth.default_tenant_mode': {
+            create_personal: '개인 작업 공간 생성',
+            tenantless: '작업 공간 생성 안 함'
+          }
+        },
         errors: {
           generic: '감사 로그 로드 실패'
         }
@@ -4665,6 +4686,9 @@ export default {
           registration_mode: '가입 모드',
           default_tenant_mode: '기본 공간 프로비저닝',
           complex_password_enabled: '복잡한 비밀번호 사용'
+        },
+        user: {
+          role: '멤버 역할'
         }
       },
       runtime: {

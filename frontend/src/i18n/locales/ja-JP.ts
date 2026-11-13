@@ -5028,6 +5028,9 @@ export default {
           default_tenant_mode: 'デフォルトのワークスペース作成方式',
           complex_password_enabled: '複雑なパスワードを必須にする'
         },
+        user: {
+          role: 'メンバー権限'
+        },
         ssrf: {
           whitelist: 'SSRF保護の許可リスト'
         },
@@ -5242,6 +5245,27 @@ export default {
         },
         actorRole: {
           system_admin: 'システム管理者'
+        },
+        valueLabels: {
+          boolean: {
+            true: '有効',
+            false: '無効'
+          },
+          'auth.registration_mode': {
+            invite_only: '招待のみ',
+            self_serve: 'セルフサービス',
+            invite_register: '招待登録'
+          },
+          'user.role': {
+            viewer: '閲覧者',
+            contributor: '編集者',
+            admin: '管理者',
+            owner: '所有者'
+          },
+          'auth.default_tenant_mode': {
+            create_personal: '個人ワークスペースを作成',
+            tenantless: 'ワークスペースを作成しない'
+          }
         },
         columns: {
           time: '日時',
