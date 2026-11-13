@@ -768,7 +768,10 @@ onMounted(async () => {
    ============================================================ */
 .animated-bg {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   pointer-events: none;
   z-index: 1;
   overflow: hidden;
@@ -1482,6 +1485,14 @@ onMounted(async () => {
 
 /* Responsive Design */
 @media (max-width: 1024px) {
+  .knowledge-node:nth-of-type(n + 13) {
+    display: none;
+  }
+
+  .connection-line:nth-of-type(n + 13) {
+    display: none;
+  }
+
   .showcase-subtitle {
     font-size: var(--app-text-2xl);
   }
@@ -1514,6 +1525,14 @@ onMounted(async () => {
 @media (max-width: 768px) {
   .login-layout {
     flex-direction: column;
+  }
+
+  .knowledge-node:nth-of-type(n + 9) {
+    display: none;
+  }
+
+  .connection-line:nth-of-type(n + 9) {
+    display: none;
   }
 
   .showcase-section {
@@ -1630,9 +1649,9 @@ onMounted(async () => {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .glow,
-  .orbit,
-  .particle {
+
+  .knowledge-node,
+  .connection-line {
     animation: none !important;
     transition: none !important;
   }

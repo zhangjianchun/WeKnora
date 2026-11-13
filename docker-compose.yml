@@ -821,15 +821,12 @@ services:
     container_name: AiRAG-langfuse-minio
     restart: unless-stopped
     entrypoint: sh
-    # 启动前创建 `langfuse` 桶，Langfuse 开箱即用
     command: -c 'mkdir -p /data/langfuse && minio server --address ":9000" --console-address ":9001" /data'
     environment:
       MINIO_ROOT_USER: ${LANGFUSE_MINIO_USER:-langfuseminio}
       MINIO_ROOT_PASSWORD: ${LANGFUSE_MINIO_PASSWORD:-langfuseminiosecret}
     ports:
-      # 9100：S3 API（浏览器上传媒体时会直连此端口，必须对外暴露）
       - "${LANGFUSE_MINIO_S3_PORT:-9100}:9000"
-      # 9101：MinIO 控制台（可选，方便排障）
       - "${LANGFUSE_MINIO_CONSOLE_PORT:-9101}:9001"
     volumes:
       - langfuse_minio_data:/data
@@ -849,7 +846,6 @@ services:
     container_name: AiRAG-langfuse-worker
     restart: unless-stopped
     depends_on: &langfuse-depends-on
-      # 复用 WeKnora 已有的 postgres/redis，需要先完成 langfuse 数据库的创建
       langfuse-db-init:
         condition: service_completed_successfully
       redis:
@@ -877,9 +873,6 @@ services:
       _LF_DB_NAME: ${LANGFUSE_DB_NAME:-langfuse}
       _LF_REDIS_PASSWORD: ${REDIS_PASSWORD}
       _LF_REDIS_DB: ${LANGFUSE_REDIS_DB:-1}
-      # SALT / ENCRYPTION_KEY 生产环境务必重新生成：
-      #   SALT: openssl rand -base64 32
-      #   ENCRYPTION_KEY: openssl rand -hex 32
       SALT: ${LANGFUSE_SALT:-weknora-langfuse-dev-salt-change-me}
       ENCRYPTION_KEY: ${LANGFUSE_ENCRYPTION_KEY:-0000000000000000000000000000000000000000000000000000000000000000}
       NEXTAUTH_URL: ${LANGFUSE_NEXTAUTH_URL:-http://localhost:3000}
