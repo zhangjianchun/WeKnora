@@ -4473,14 +4473,6 @@ export default {
               create_personal: 'Создать личное пространство',
               tenantless: 'Не создавать пространство'
             }
-          },
-          user: {
-            role: {
-              viewer: 'Наблюдатель',
-              contributor: 'Редактор',
-              admin: 'Администратор',
-              owner: 'Владелец'
-            }
           }
         },
         errors: {

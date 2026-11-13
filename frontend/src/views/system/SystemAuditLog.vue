@@ -332,6 +332,13 @@ function formatAuditScalar(value: unknown, contextKey: string | undefined): stri
   }
 }
 
+// 成员角色复用 tenantMember.role.*（与成员列表 / 角色下拉完全一致），
+// 仍保留「中文 (原始值)」格式，便于在审计日志里直接排障。
+function formatRoleLabel(role: string): string {
+  const path = `tenantMember.role.${role}`
+  return te(path) ? `${t(path)} (${role})` : role
+}
+
 function auditDetailsObject(row: AuditLog): Record<string, unknown> | null {
   if (row.details && typeof row.details === 'object') {
     return row.details as Record<string, unknown>
@@ -403,7 +410,7 @@ function auditTargetDiff(row: AuditLog): string {
     const oldRole = typeof details.old_role === 'string' ? details.old_role : null
     const newRole = typeof details.new_role === 'string' ? details.new_role : null
     if (oldRole !== null && newRole !== null) {
-      return `${formatAuditScalar(oldRole, 'user.role')} → ${formatAuditScalar(newRole, 'user.role')}`
+      return `${formatRoleLabel(oldRole)} → ${formatRoleLabel(newRole)}`
     }
     return ''
   }
@@ -420,9 +427,9 @@ function auditTargetDiff(row: AuditLog): string {
     return ''
   }
   if (row.action === 'rbac.access_denied' && typeof details.required_role === 'string') {
-    // required_role 也是角色枚举，一并走 user.role 字典做中英对照。
+    // required_role 也是角色枚举，复用成员角色映射做中英对照。
     return t('system.globalSettings.audit.target.requiredRole', {
-      role: formatAuditScalar(details.required_role, 'user.role'),
+      role: formatRoleLabel(details.required_role),
     })
   }
   return ''

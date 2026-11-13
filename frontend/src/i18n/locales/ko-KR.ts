@@ -4473,14 +4473,6 @@ export default {
               create_personal: '개인 작업 공간 생성',
               tenantless: '작업 공간 생성 안 함'
             }
-          },
-          user: {
-            role: {
-              viewer: '뷰어',
-              contributor: '편집자',
-              admin: '관리자',
-              owner: '소유자'
-            }
           }
         },
         errors: {

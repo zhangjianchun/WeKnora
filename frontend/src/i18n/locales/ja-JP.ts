@@ -5261,14 +5261,6 @@ export default {
               create_personal: '個人ワークスペースを作成',
               tenantless: 'ワークスペースを作成しない'
             }
-          },
-          user: {
-            role: {
-              viewer: '閲覧者',
-              contributor: '編集者',
-              admin: '管理者',
-              owner: '所有者'
-            }
           }
         },
         columns: {

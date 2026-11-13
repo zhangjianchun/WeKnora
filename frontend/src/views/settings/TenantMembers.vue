@@ -1144,6 +1144,13 @@ function formatAuditScalar(value: unknown, contextKey: string | undefined): stri
   }
 }
 
+// 成员角色复用 tenantMember.role.*（与成员列表 / 角色下拉完全一致），
+// 仍保留「中文 (原始值)」格式，便于在审计日志里直接排障。
+function formatRoleLabel(role: string): string {
+  const path = `tenantMember.role.${role}`
+  return te(path) ? `${t(path)} (${role})` : role
+}
+
 // 无法命中 tenantMember.audit.action['rbac.*'] — 必须用 tm + 字面量键。
 function formatAuditAction(action: AuditAction): string {
   return auditActionLabel({ tm }, AUDIT_ACTION_I18N_ROOTS.tenantMember, action)
@@ -1185,17 +1192,17 @@ function auditTargetDiff(row: AuditLog): string {
   const d = auditDetailsObject(row)
   if (!d) return ''
   if (row.action === 'rbac.member_role_changed') {
-    if (d.old_role && d.new_role) {
-      return `${formatAuditScalar(d.old_role, 'user.role')} → ${formatAuditScalar(d.new_role, 'user.role')}`
+    if (typeof d.old_role === 'string' && typeof d.new_role === 'string') {
+      return `${formatRoleLabel(d.old_role)} → ${formatRoleLabel(d.new_role)}`
     }
   }
   if (row.action === 'rbac.access_denied') {
     if (typeof d.required_role === 'string') {
-      return t('tenantMember.audit.requiredRole', { role: formatAuditScalar(d.required_role, 'user.role') })
+      return t('tenantMember.audit.requiredRole', { role: formatRoleLabel(d.required_role) })
     }
   }
   if (row.action === 'rbac.invitation_sent' || row.action === 'rbac.invitation_revoked') {
-    if (typeof d.role === 'string') return formatAuditScalar(d.role, 'user.role')
+    if (typeof d.role === 'string') return formatRoleLabel(d.role)
   }
   return ''
 }

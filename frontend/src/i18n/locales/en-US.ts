@@ -5261,14 +5261,6 @@ export default {
               create_personal: 'Create personal workspace',
               tenantless: 'Do not create a workspace'
             }
-          },
-          user: {
-            role: {
-              viewer: 'Viewer',
-              contributor: 'Editor',
-              admin: 'Admin',
-              owner: 'Owner'
-            }
           }
         },
         columns: {

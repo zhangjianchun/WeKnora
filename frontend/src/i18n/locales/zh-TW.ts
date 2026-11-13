@@ -4475,14 +4475,6 @@ export default {
               create_personal: '自動建立個人空間',
               tenantless: '不自動建立空間'
             }
-          },
-          user: {
-            role: {
-              viewer: '唯讀成員',
-              contributor: '編輯成員',
-              admin: '管理員',
-              owner: '擁有者'
-            }
           }
         },
         errors: {
