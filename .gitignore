@@ -4,6 +4,9 @@
 !.env.example
 !.gitignore
 !.github/
+# 品牌覆盖层里的 lite env 模板也是点开头文件，必须显式解除忽略，
+# 否则 package-lite.sh 在干净 clone 中会拿到官方模板。
+!branding-overrides/env/.env.lite.example
 
 # 敏感文件
 *.pem

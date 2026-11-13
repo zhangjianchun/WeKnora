@@ -153,3 +153,12 @@ i18n 文件只改 value，不改 key。
 
 - 官方升级须知：先备份 DB / 文件存储 / 部署配置；PostgreSQL `000119–000134`、SQLite `000037–000051` 迁移；新变量 `WEKNORA_LOG_FORMAT`、`WEKNORA_SANDBOX_USER_ALLOCATION`（需 Redis、全副本升级后才可开）、`WEKNORA_TENANT_DEFAULT_STORAGE_QUOTA_MB`；显式 `docker compose pull`（只 `up -d` 会复用旧镜像）。
 - 定制版镜像版本由 `AIRAG_VERSION` 控制，官方 `WEKNORA_VERSION` 不被定制 compose 读取；两者关系写在 `branding-overrides/env/.env.example`。
+
+### 品牌泄漏收口（同日）
+
+- **内置助手的产品文档检索已默认关闭**：`internal/application/service/agent_service.go` 的 `registerProductDocTools()` 增加 `AIRAG_ENABLE_PRODUCT_DOCS` 开关，默认不注册 `search_weknora_docs` / `read_weknora_doc`。这是分支上**唯一一处后端源码改动**——交付包只含预编译二进制，覆盖层在打包阶段已无法影响它，维护方式见 `branding-overrides/README.md`「构建期定制」。
+- **不要删空 `website-docs/`**：`website-docs/embed.go` 用 `//go:embed 0*/*.md` 把 74 篇文档编进服务端，删空会让 `go build` 报 `no matching files found`，`docsUrl.test.ts` 也会失败。保留目录、在工具注册入口关掉是最小侵入做法。
+- 助手入口仍按门控全版本可用，只是不再引用官方文档；将来换成自有文档后，在 `.env` 设 `AIRAG_ENABLE_PRODUCT_DOCS=1` 恢复。
+- 清掉 3 处官方文档外链：`ModelEditorDialog.vue`（compat 文档）、`SandboxConfigEditorDrawer.vue`（集群搭建指南，两处）、`SystemInfo.vue`（迁移排障文档 + 上游 GitHub issue 上报）。微信开发者文档、E2B 控制台等第三方服务商链接保留；迁移失败仍显示完整错误详情。
+- 修复：`.env.lite.example` 覆盖物此前被 `.gitignore` 的 `.*` 规则忽略、从未入库，导致 lite 包会拿到官方模板；已加例外规则。
+- **已知残留**：`CliIntegrationLanding.vue` 的 CLI 安装命令仍含 `git clone https://github.com/Tencent/WeKnora.git` 与 `weknora` 命令名。整页品牌化需先确定自有 CLI 分发渠道，属产品决策，暂未改。
