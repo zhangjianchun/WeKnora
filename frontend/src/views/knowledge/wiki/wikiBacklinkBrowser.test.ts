@@ -7,6 +7,7 @@ import { runInNewContext } from 'node:vm'
 import { compileScript, parse } from '@vue/compiler-sfc'
 import ts from 'typescript'
 import { createRenderer, nextTick } from 'vue'
+import { editionTestStub } from '../../../test-utils/vueFixture'
 
 const require = createRequire(import.meta.url)
 const filename = fileURLToPath(new URL('./WikiBrowser.vue', import.meta.url))
@@ -62,6 +63,7 @@ async function fixture() {
       // DOM sanitization has separate tests; this fixture exercises the actual
       // component's title resolution and Markdown caller before that boundary.
       if (name === '@/utils/security') return { sanitizeMarkdownHTML: (html: string) => html, hydrateProtectedFileImages: async () => {} }
+      if (name === '@/config/edition') return editionTestStub
       if (name.startsWith('./wiki')) return require(`${name}.ts`)
       if (name === '@/utils/markedLiteralTilde') return require('../../../utils/markedLiteralTilde.ts')
       if (name.endsWith('.vue') || ['vue-virtual-scroller', '@/api/knowledge-base', '@/api/chat'].includes(name)) return { default: {} }

@@ -20,7 +20,7 @@
                   {{ $t('agent.createAgent') }}
                 </t-button>
               </t-tooltip>
-              <t-tooltip v-if="authStore.hasRole('contributor') && assistantStore.pageAccess"
+              <t-tooltip v-if="authStore.hasRole('contributor') && canCreateWithAssistant"
                 :content="$t('assistant.create.agentHint')" placement="bottom">
                 <t-button variant="text" theme="default" size="small" class="header-action-btn"
                   style="--wails-draggable: no-drag" @click="assistantCreateVisible = true">
@@ -597,7 +597,7 @@
             </template>
             <span>{{ $t('agent.createAgent') }}</span>
           </t-button>
-          <t-button v-if="authStore.hasRole('contributor') && assistantStore.pageAccess" variant="outline"
+          <t-button v-if="authStore.hasRole('contributor') && canCreateWithAssistant" variant="outline"
             class="agent-create-btn" @click="assistantCreateVisible = true">
             <template #icon>
               <ResourceIcon type="assistant" :size="16" />
@@ -638,7 +638,7 @@
             </template>
             <span>{{ $t('agent.createAgent') }}</span>
           </t-button>
-          <t-button v-if="authStore.hasRole('contributor') && assistantStore.pageAccess" variant="outline"
+          <t-button v-if="authStore.hasRole('contributor') && canCreateWithAssistant" variant="outline"
             class="agent-create-btn" @click="assistantCreateVisible = true">
             <template #icon>
               <ResourceIcon type="assistant" :size="16" />
@@ -720,7 +720,7 @@
       </div>
     </Transition>
 
-    <AssistantCreateDialog v-model:visible="assistantCreateVisible" kind="agent" @manual="handleCreateAgent" />
+    <AssistantCreateDialog v-if="canCreateWithAssistant" v-model:visible="assistantCreateVisible" kind="agent" @manual="handleCreateAgent" />
 
     <!-- 智能体编辑器弹窗 -->
     <AgentEditorModal :visible="editorVisible" :mode="editorMode" :agent="editingAgent"
@@ -770,6 +770,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useListUrlState } from '@/composables/useListUrlState'
 import { useResourcePins } from '@/composables/useResourcePins'
 import { integrationSectionKey } from '@/config/settingsRoute'
+import { isFeatureEnabled } from '@/config/edition'
 import {
   DEFAULT_RESOURCE_SORT,
   sortResourcesWithinGroups,
@@ -783,6 +784,13 @@ const router = useRouter()
 const authStore = useAuthStore()
 const assistantStore = useAssistantStore()
 const assistantCreateVisible = ref(false)
+/**
+ * 0.9.0「用助手创建」入口：由 edition.ts 的 'agent.createWithAssistant' 独立开关控制，
+ * 该 key 登记在 ASSISTANT_DEPENDENT_KEYS，因此助手总开关关闭时也必然隐藏；
+ * 同时保留用户在助手菜单里设置的页面访问开关（pageAccess）。
+ */
+const canCreateWithAssistant = computed(() =>
+  isFeatureEnabled('agent.createWithAssistant') && assistantStore.pageAccess)
 const uiStore = useUIStore()
 const orgStore = useOrganizationStore()
 const chatResources = useChatResourcesStore()

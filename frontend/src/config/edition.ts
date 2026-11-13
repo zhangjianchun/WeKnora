@@ -14,6 +14,7 @@
  *   只改 'nav.assistant' 这一行（助手总开关）。关掉后，Logo 旁入口、
  *   设置里的「助手」、自动化导航、多智能体协作、执行审批等全部一起隐藏；
  *   打开后，上述功能按各自在 FEATURE_MATRIX 里的分档恢复。
+ * 个别入口另有独立开关：智能体页「用助手创建」→ 'agent.createWithAssistant'（默认隐藏）。
  *
  * 注意：纯前端 UI 门控，不做后端鉴权。
  * ============================================================
@@ -75,6 +76,7 @@ export type FeatureKey =
     | 'agent.multimodal'               // 智能体 · 附件上传
     | 'agent.skills'                   // 智能体 · 技能
     | 'agent.share'                    // 智能体 · 发布集成
+    | 'agent.createWithAssistant'      // 0.9.0：智能体页「用助手创建」按钮（受助手总开关约束）
     // ==================== 0.9.0 助手之上的能力 ====================
     | 'assistant.collaboration'        // 多智能体协作
     | 'assistant.automations'          // 自动化任务
@@ -156,6 +158,10 @@ const FEATURE_MATRIX: Record<FeatureKey, Record<Edition, boolean>> = {
 
   // --- 彻底隐藏 ---
   'agent.skills':       { lite: false, pro: false, enterprise: false },  // 技能（沙箱 bug）
+
+  // 0.9.0 智能体页「用助手创建」：独立开关，默认隐藏；同时登记在 ASSISTANT_DEPENDENT_KEYS，
+  // 助手总开关关闭时必然隐藏。想放开只需把这一行改回 true（且 nav.assistant 为 true）。
+  'agent.createWithAssistant': { lite: false, pro: false, enterprise: false },
 
   // ═══════════════ 0.9.0 助手之上的能力（受助手总开关约束）═══════════════
   'assistant.collaboration': { lite: true,  pro: true,  enterprise: true  },  // 多智能体协作
@@ -268,6 +274,7 @@ const ASSISTANT_DEPENDENT_KEYS: ReadonlySet<FeatureKey> = new Set<FeatureKey>([
   'assistant.collaboration',
   'assistant.automations',
   'assistant.approvals',
+  'agent.createWithAssistant',
 ])
 
 /** 助手总开关：全站助手相关 UI 的唯一开关（对应 FEATURE_MATRIX['nav.assistant']） */

@@ -16,6 +16,22 @@ export async function flush() {
   await vue.nextTick()
 }
 
+/**
+ * 定制版功能门控模块的测试替身：默认「功能全部开放」，保持上游单测原本验证的行为。
+ * 自建 vm 沙箱的测试也可直接复用，避免每处都声明一遍 @/config/edition 依赖。
+ * 需要验证某个开关关闭的用例，请在自己的 setup 里显式覆盖。
+ */
+export const editionTestStub = {
+  CURRENT_EDITION: 'enterprise',
+  EDITION_NAME: 'enterprise',
+  APP_VERSION: 'test',
+  isFeatureEnabled: () => true,
+  isAssistantEnabled: () => true,
+  isSectionEnabledByEdition: () => true,
+  ASSISTANT_CAPABILITIES: { collaboration: () => true, automations: () => true, approvals: () => true },
+  NAV_PATH_FEATURE: {}, SETTINGS_SECTION_FEATURE: {}, KB_SECTION_FEATURE: {}, AGENT_SECTION_FEATURE: {},
+}
+
 export function fixture(
   t: TestContext,
   storage: Pick<Storage, 'getItem' | 'setItem' | 'removeItem'> = { getItem: () => null, setItem() {}, removeItem() {} },
@@ -67,6 +83,9 @@ export function fixture(
       vue, '@/utils/assistantDataChange': dataChange, ...dependencies,
     }, name => {
       if (name.endsWith('.vue')) return { default: {} }
+      // 定制版功能门控模块：上游单测未显式声明该依赖时，按「功能全部开放」提供默认实现，
+      // 保证组件原有行为不受门控影响；需要验证某个开关关闭的用例可在 setup 里显式覆盖。
+      if (name === '@/config/edition') return editionTestStub
       if (name.startsWith('.')) return require(name)
       assert.fail(`Unexpected component dependency: ${name}`)
     })

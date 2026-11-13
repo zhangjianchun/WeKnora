@@ -146,6 +146,8 @@ i18n 文件只改 value，不改 key。
 - 新增 key：`nav.assistant`（**助手总开关**）、`nav.automations`、`settings.assistant`、`settings.defaults`、`assistant.collaboration`、`assistant.automations`、`assistant.approvals`。
 - **单一总开关**：`edition.ts` 导出 `isAssistantEnabled()`（读 `FEATURE_MATRIX['nav.assistant']`），`ASSISTANT_DEPENDENT_KEYS` 登记了 `settings.assistant` / `nav.automations` / `assistant.*` 等派生功能。`isFeatureEnabled()` 对这些 key 额外要求总开关为 `true`，所以把 `nav.assistant` 一行改成 `false` 时，Logo 旁入口、设置页「助手」、自动化导航、多智能体协作、执行审批、助手引导弹框会一起消失；改成 `true` 则按各自矩阵分档整体恢复。**不用再逐行改 6 个开关。**
 - 已接线：Logo 旁 / 折叠态助手按钮、设置 section 过滤与深链守卫、自动化导航与路由守卫、执行权限选择器（`ASSISTANT_CAPABILITIES.approvals()`）、自动化新建按钮（`...automations()`）、聊天「问助手」、Wiki / 文档助手动作按钮；组件统一调用 `isAssistantEnabled()`。
+- **智能体页「用助手创建」是独立开关** `agent.createWithAssistant`（默认全版本 `false`）：此前 `AgentList.vue` 的 3 处按钮只判断 `assistantStore.pageAccess`（默认 `true`），完全没读 `edition.ts`，所以任何开关都管不到它。现在按钮和 `AssistantCreateDialog` 统一由 `isFeatureEnabled('agent.createWithAssistant') && pageAccess` 控制；该 key 同样登记在 `ASSISTANT_DEPENDENT_KEYS`，助手总开关关闭时必然隐藏，总开关打开后仍可单独决定是否放开。自动化页的同款弹框也补上了 `ASSISTANT_CAPABILITIES.automations()` 门控。
+- 单测兼容：给组件新增 `@/config/edition` 依赖后，自建 vm 沙箱的上游测试会因「依赖未声明」或 Node 下 `import.meta.env` 缺失而失败。`src/test-utils/vueFixture.ts` 导出统一的 `editionTestStub`（默认功能全开），`AssistantPanel.test.ts`、`wikiBacklinkBrowser.test.ts`、`useModalShell.test.ts`、`AssistantActionButton.test.ts` 复用；`AgentList.test.ts` 另加 2 个用例验证该开关与 `pageAccess` 的组合。
 - `settings.defaults`（空间默认模型）与助手无关，不受总开关影响。
 - **刻意不接线**：聊天流里的审批卡片 / 协作进度卡片——隐藏会让运行中的任务卡在待审批，`assistant.collaboration` / `assistant.approvals` 只作能力预留，以后要关某个能力请在「入口」处调用。
 - 0.8.3 时因 400 报错被注释的助手入口与设置项已恢复，改由门控控制。

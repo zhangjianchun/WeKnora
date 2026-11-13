@@ -8,6 +8,7 @@ import * as vue from 'vue'
 import * as pinia from 'pinia'
 import ts from 'typescript'
 import * as childAgentTabs from '../../composables/useChildAgentTabs'
+import { editionTestStub } from '../../test-utils/vueFixture'
 
 const filename = fileURLToPath(new URL('./AssistantPanel.vue', import.meta.url))
 const { descriptor } = parse(readFileSync(filename, 'utf8'), { filename })
@@ -25,6 +26,8 @@ function evaluate(source: string, dependencies: Record<string, unknown>, globals
     exports, console, ...globals,
     require(name: string) {
       if (name in dependencies) return dependencies[name]
+      // 定制版功能门控：未显式声明时按「全部开放」处理
+      if (name === '@/config/edition') return editionTestStub
       throw new Error(`Unexpected component dependency: ${name}`)
     },
   })

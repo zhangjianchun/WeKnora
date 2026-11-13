@@ -4,8 +4,9 @@ import * as vue from 'vue'
 import * as sorting from '../../utils/resourceSorting.ts'
 import { change, fixture, flush } from '../../test-utils/vueFixture.ts'
 
-function setup(t: TestContext) {
+function setup(t: TestContext, createWithAssistant = true) {
   const f = fixture(t)
+  const assistant = vue.reactive({ pageAccess: true })
   const fetchAgentsForList = t.mock.fn(async (_params: unknown, _force: boolean) => ({
     data: [{ id: 'agent', name: 'Updated agent' }], disabled_own_agent_ids: [],
   }))
@@ -26,12 +27,13 @@ function setup(t: TestContext) {
     '@/composables/useListUrlState': { useListUrlState: () => ({ scope: vue.ref('all'), creator: vue.ref('all'), query: vue.ref('') }) },
     '@/composables/useResourcePins': { useResourcePins: () => ({ favorites: vue.ref([]), recents: vue.ref([]) }) },
     '@/composables/useAssistantPageContext': { useAssistantPageContext() {} },
-    '@/stores/assistant': { useAssistantStore: () => ({ pageAccess: true }) },
+    '@/stores/assistant': { useAssistantStore: () => assistant },
+    '@/config/edition': { isFeatureEnabled: (key: string) => key === 'agent.createWithAssistant' ? createWithAssistant : true },
     '@/api/agent': {}, '@/api/chat/index': {}, '@/api/organization': {},
     '@/config/contextualGuides': { markContextualGuideDone() {} }, '@/config/settingsRoute': {},
     '@/utils/resourceListSearch': {}, '@/utils/card-list-badge': {}, '@/utils/resourceSorting': sorting,
   })
-  return { ...f, ...page, fetchAgentsForList }
+  return { ...f, ...page, fetchAgentsForList, assistant }
 }
 
 test('refreshes the mounted agent list once per burst, ignoring other areas and unmounted pages', async t => {
@@ -75,4 +77,19 @@ test('the original create entry opens the configuration form directly', async t 
   assert.equal(f.vm.editorMode, 'create')
   assert.equal(f.vm.editorInitialSection, 'basic')
   assert.equal(f.vm.editingAgent, null)
+})
+
+test('the "create with assistant" entry stays hidden when its edition switch is off', async t => {
+  const f = setup(t, false)
+  await flush()
+  assert.equal(f.vm.canCreateWithAssistant, false)
+})
+
+test('the "create with assistant" entry needs both the edition switch and page access', async t => {
+  const f = setup(t, true)
+  await flush()
+  assert.equal(f.vm.canCreateWithAssistant, true)
+  f.assistant.pageAccess = false
+  await flush()
+  assert.equal(f.vm.canCreateWithAssistant, false)
 })

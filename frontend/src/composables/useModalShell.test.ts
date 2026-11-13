@@ -6,6 +6,7 @@ import test from 'node:test'
 import { compileScript, parse } from '@vue/compiler-sfc'
 import ts from 'typescript'
 import * as vue from 'vue'
+import { editionTestStub } from '../test-utils/vueFixture'
 
 const require = createRequire(import.meta.url)
 const renderer = vue.createRenderer<any, any>({
@@ -37,6 +38,8 @@ function fixture() {
   }
   const modules: Record<string, any> = {
     vue,
+    // 避免沙箱回退到真实 edition.ts（Node 下没有 import.meta.env）
+    '@/config/edition': editionTestStub,
     'vue-i18n': { useI18n: () => ({ t: (key: string) => key, locale: vue.ref('en') }) },
     'vue-router': { useRouter: () => ({}) },
     pinia: { storeToRefs: vue.toRefs },

@@ -22,6 +22,8 @@ function fixture(selection?: { text: string; field?: string }) {
     vue,
     'vue-i18n': { useI18n: () => ({ t: (key: string) => key }) },
     '@/stores/assistant': { useAssistantStore: () => assistant },
+    // 定制版功能门控：默认放开，保持上游单测原本验证的行为
+    '@/config/edition': { isAssistantEnabled: () => true },
     './AssistantButton.vue': { render: () => null },
   }
   const exports: any = {}

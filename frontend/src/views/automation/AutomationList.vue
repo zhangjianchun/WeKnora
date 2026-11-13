@@ -91,7 +91,7 @@
       </div>
     </section>
 
-    <AssistantCreateDialog v-model:visible="assistantCreateVisible" kind="automation" @manual="openEditor(null)" />
+    <AssistantCreateDialog v-if="ASSISTANT_CAPABILITIES.automations()" v-model:visible="assistantCreateVisible" kind="automation" @manual="openEditor(null)" />
     <AutomationEditor v-model:visible="editorVisible" :automation="editing" @saved="onSaved" />
     <AutomationDetail v-model:visible="detailVisible" :automation="detail"
       :focus-run-id="focusRunId" @changed="onSaved" @edit="openEditor" />
