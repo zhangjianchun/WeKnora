@@ -166,6 +166,14 @@ i18n 文件只改 value，不改 key。
 ### 0.9.0 新功能按后端能力回退（同日）
 
 - 实测组合：前端 `npm run dev` + 旧版官方后端镜像。助手提问报「流式连接失败: HTTP 400」、自动化报「404 page not found」——`/api/v1/agent-chat`、`/api/v1/automations` 在旧后端不存在，前端无法修补。
-- `edition.ts` 把 6 个 0.9.0 新功能开关设为全版本 `false`；`platform/index.vue` 用 `v-if` 整体不挂载 `AssistantPanel` / `AssistantLauncher` / `AssistantPageBridge`。菜单两处入口、命令面板（原本已注释）、聊天「问助手」、Wiki / 文档 / 知识库的助手动作按钮全部收口。
+- `edition.ts` 后来收敛为「助手总开关」：`nav.assistant` 全版本 `false`，其余派生 key 通过 `ASSISTANT_DEPENDENT_KEYS` 自动跟随（详见「版本门控」）；`platform/index.vue` 用 `v-if` 整体不挂载 `AssistantPanel` / `AssistantLauncher` / `AssistantPageBridge`。菜单两处入口、设置页「助手」、命令面板（原本已注释）、聊天「问助手」、Wiki / 文档 / 知识库的助手动作按钮全部收口。
 - 助手「新功能」引导弹框（含 `v0.9.0 新功能` 字样）不再弹出：`NewUserGuide.vue` 增加 `assistantGuideEnabled` prop（默认 `true`，上游单测行为不变），由 `platform/index.vue` 按开关传入；同时调 `markAssistantEntryGuideDone()`，避免该引导标记缺失把页面级情境引导一起卡住。6 种语言的 `assistantEntryGuide.stepOf` 已去掉上游版本号。
 - 后端镜像升级到 0.9.0 后，只需把 `edition.ts` 的 `nav.assistant` 一行改回 `true` 即可整体恢复（见「版本门控」的单开关说明），门控接线都还在。
+
+### 后端镜像切换到官方 v0.9.0（同日）
+
+- 拉取 `wechatopenai/weknora-app|docreader|ui:v0.9.0`，三个镜像的 OCI `revision` 均为 `f17ee8a8d`（与 `main` 同步的 v0.9.0 tag 一致）。按交付命名打上 `ghcr.io/zhangjianchun/airag-app:v0.9.0`、`airag-docreader:v0.9.0`；本地 `wechatopenai/weknora-*:latest` 也重新指向 v0.9.0，避免 `:latest` 复用 v0.8.3 缓存。
+- 本地开发栈 `E:\zhangjianchun\WeKnora\.env` 增加 `AIRAG_VERSION=v0.9.0`（定制 compose 不读 `WEKNORA_VERSION`）。
+- **本地栈与交付 compose 不同代**：运行中的容器是 0.8.3 时代创建的 `WeKnora-*` 名称 / `weknora_*` 数据卷 / `weknora_WeKnora-network` 网络；仓库当前 compose 已改成 `AiRAG-*` / `airag_*` / `airag-network`（给交付包用）。直接 `docker compose up -d` 会挂到另一套数据卷、连不上现有 postgres/redis。因此把资源名对齐回本地栈的覆盖文件放在仓库外 `E:\zhangjianchun\weknora-backups\docker-compose.local-v0.9.0.yml`，只重建 `app` / `docreader`，postgres / redis / frontend 不动。
+- 切换前已用 `pg_dumpall` 备份 PostgreSQL 全库到 `E:\zhangjianchun\weknora-backups\weknora-db-20261113-pre-v0.9.0.sql`；`AUTO_MIGRATE=true` 负责 0.9.0 的 `000119–000134` 迁移。
+- 前端助手总开关默认仍保持关闭，后端换成 0.9.0 后可按「版本门控」一行放开。
