@@ -610,7 +610,7 @@ export default {
     }
   },
   assistantEntryGuide: {
-    stepOf: 'NEW IN v0.9.0',
+    stepOf: 'NEW FEATURE',
     skip: 'Got it',
     interactHint: 'Click the highlighted entry to open the assistant.',
   },

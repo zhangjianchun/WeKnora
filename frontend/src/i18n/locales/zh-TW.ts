@@ -8986,7 +8986,7 @@ export default {
     }
   },
   assistantEntryGuide: {
-    stepOf: 'v0.9.0 新功能',
+    stepOf: '新功能',
     skip: '知道了',
     interactHint: '點擊反白的入口，開啟助手試試。',
   },

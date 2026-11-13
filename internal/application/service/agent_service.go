@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"slices"
 	"strings"
 
@@ -598,13 +597,6 @@ func (s *agentService) registerOperationTools(
 // pages at all withholds the tools, and never the run.
 func registerProductDocTools(ctx context.Context, toolRegistry *tools.ToolRegistry, config *types.AgentConfig) {
 	if config == nil || !config.ProductDocs {
-		return
-	}
-	// AiRAG 品牌定制：内置文档（website-docs）会让助手在回答「这是什么产品」
-	// 时带出上游品牌与官方站点链接，前端文案替换覆盖不到。定制版默认不注册
-	// search_weknora_docs / read_weknora_doc；自备品牌化文档后，设置
-	// AIRAG_ENABLE_PRODUCT_DOCS=1 可恢复（见 branding-overrides/README.md）。
-	if os.Getenv("AIRAG_ENABLE_PRODUCT_DOCS") != "1" {
 		return
 	}
 	lib, err := productdocs.Default()

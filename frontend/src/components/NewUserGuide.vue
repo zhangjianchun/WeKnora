@@ -17,6 +17,13 @@ import { useAssistantStore } from '@/stores/assistant'
 import { useUIStore } from '@/stores/ui'
 import type { SpotlightGuideStep } from '@/types/spotlightGuide'
 
+// 定制版：助手入口由 edition.ts 关闭后不再介绍助手（该引导文案带上游版本号，
+// 且高亮目标 [data-guide="assistant-entry"] 已不存在）。默认 true 保持上游行为，
+// 由 platform/index.vue 按 nav.assistant 开关传入。
+const props = withDefaults(defineProps<{ assistantGuideEnabled?: boolean }>(), {
+  assistantGuideEnabled: true,
+})
+
 const uiStore = useUIStore()
 const assistant = useAssistantStore()
 const active = ref(false)
@@ -34,7 +41,7 @@ const assistantStep = computed<SpotlightGuideStep>(() => ({
 
 const steps = computed<SpotlightGuideStep[]>(() => assistantOnly.value ? [assistantStep.value] : [
   { key: 'welcome' },
-  ...(assistant.entry !== 'palette' ? [assistantStep.value] : []),
+  ...(props.assistantGuideEnabled && assistant.entry !== 'palette' ? [assistantStep.value] : []),
   {
     key: 'knowledge',
     target: '[data-guide="nav-knowledge-bases"]',
@@ -104,6 +111,8 @@ const scheduleAutoGuide = () => {
   if (active.value || isGlobalUserGuideDone()) return
 
   const upgrading = localStorage.getItem(GLOBAL_USER_GUIDE_KEY) === '1'
+  // 定制版跳过面向升级用户的「助手新功能」二次引导
+  if (upgrading && !props.assistantGuideEnabled) return
   if (upgrading && (assistant.visible || assistant.entry === 'palette')) {
     // The user has already opened the assistant, or chose to hide its entry.
     localStorage.setItem(ASSISTANT_ENTRY_GUIDE_KEY, '1')
@@ -114,7 +123,7 @@ const scheduleAutoGuide = () => {
   openTimer = setTimeout(() => {
     openTimer = null
     if (active.value || isGlobalUserGuideDone()) return
-    assistantOnly.value = upgrading
+    assistantOnly.value = upgrading && props.assistantGuideEnabled
     active.value = true
   }, 700)
 }

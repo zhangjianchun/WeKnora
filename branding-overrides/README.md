@@ -32,24 +32,29 @@ bash branding-overrides/apply.sh <目标目录>
 | `frontend/Dockerfile` | 注入 `VITE_EDITION` / `VITE_AppVersion` 构建参数 |
 | `docreader/*` | PyInstaller 单文件打包（spec、hook、入口脚本、pyproject dev 组、uv.lock） |
 | `scripts/build_browserskill.sh` | git clone / pnpm 走国内代理与镜像 |
-| `env/.env.example`、`env/.env.lite.example` | 品牌文案；**密钥一律留空**；`AIRAG_ENABLE_PRODUCT_DOCS=0` |
+| `env/.env.example`、`env/.env.lite.example` | 品牌文案；**密钥一律留空** |
 
 > `.gitignore` 第 2 行 `.*` 会忽略所有点开头文件，因此第 9 行有 `!branding-overrides/env/.env.lite.example` 例外。
 > 这一行不能删：`package-lite.sh` 在干净 clone 里要靠它拿到品牌化模板，否则会退回官方模板。
 
-## 构建期定制（不在覆盖层内，但在本分支源码上）
+## 前端功能门控（`edition.ts`，不在覆盖层内）
 
-有一类改动**必须在源码层**，不能放进本覆盖层：
+`frontend/src/config/edition.ts` 是本分支的源码改动，不通过覆盖层注入。
+定制版后端**沿用旧版官方镜像**（只改镜像名，不编译 Go），因此 0.9.0 依赖新
+后端接口的助手、自动化等功能在矩阵里全部设为 `false`：`nav.assistant`、
+`nav.automations`、`settings.assistant`、`assistant.collaboration`、
+`assistant.automations`、`assistant.approvals`。`platform/index.vue` 依据
+`nav.assistant` 整体不挂载助手面板、浮动入口与页面桥接，介绍助手的「新功能」
+引导弹框也一并跳过。`settings.defaults`（空间默认模型）与助手无关，保持开启。
 
-| 文件 | 改动 | 为什么不能靠覆盖层 |
-|---|---|---|
-| `internal/application/service/agent_service.go` | `registerProductDocTools()` 增加 `AIRAG_ENABLE_PRODUCT_DOCS` 开关，默认不注册 `search_weknora_docs` / `read_weknora_doc` | 交付包只含预编译二进制（`WeKnora-lite`、`frontend/dist`），**没有 Go 源码**；打包阶段再覆盖已影响不到二进制 |
+**这也是内置助手官方文档检索的防线**：`website-docs/` 的 74 篇 md 含上游品牌
+与官方站点链接，前端文案替换覆盖不到。后端用官方镜像时，本分支的 Go 源码不会
+进入交付二进制，任何后端侧开关都不生效；**隐藏助手入口才是实际有效的做法**。
+不要删空 `website-docs/`：`embed.go` 用 `//go:embed 0*/*.md` 把文档编进服务端，
+删空会让 `go build` 报 `no matching files found`。
 
-**为什么不能直接删空 `website-docs/`**：`website-docs/embed.go` 用 `//go:embed 0*/*.md` 把 74 篇文档编进服务端，删空会让 `go build` 报 `no matching files found`；`frontend/src/utils/docsUrl.test.ts` 也会失败。保留目录原样、在工具注册入口关掉，是最小侵入且唯一可靠的做法。
-
-**升级重放**：每次同步官方新版后，确认 `registerProductDocTools()` 里这段开关仍在（`"os"` import + 紧跟 `config == nil` 判断后的 `os.Getenv` 提前 return）。若上游重写了该函数，把开关重新加回去即可。**漏掉会导致助手把上游品牌答给客户**；这是本分支唯一一处后端源码改动，冲突面只有几行。
-
-**恢复文档检索**：先把 `website-docs/0*/*.md` 换成自己的品牌化文档（v0.9.0 的 74 篇里有 281 处 `WeKnora`，另含大量官方站点与仓库链接，不是简单文本替换能覆盖的），再在 `.env` 设 `AIRAG_ENABLE_PRODUCT_DOCS=1`。当前默认 `0`。
+**恢复条件**：先把后端镜像换成 0.9.0 并准备好自有品牌化文档，再把 `edition.ts`
+里上述几行改回 `true`；门控接线一直保留，不需要重新接线。
 
 ## 已放弃、跟随上游的定制
 
@@ -72,5 +77,5 @@ bash branding-overrides/apply.sh <目标目录>
 1. 先同步 `main` 到新 tag，再合并进 `branding`。
 2. 逐个对比本目录文件与上游同名文件的新版内容（`git diff <旧tag>..<新tag> -- <路径>`），把定制点重新打到新版基底上。
 3. 重点复核 `config/config.yaml`、`docker/Dockerfile.app`、`docreader/pyproject.toml` 与 `docreader/uv.lock`——这几个文件上游变化较频繁。
-4. **确认「构建期定制」那一处后端开关没有被合并冲掉**，再编译二进制。
+4. **确认 `frontend/src/config/edition.ts` 的 0.9.0 开关与 `platform/index.vue` 的门控接线没有被合并冲掉**，再编译前端。
 5. 运行 `bash branding-overrides/apply.sh <临时目录> --check` 确认清单，再跑一次构建验证。

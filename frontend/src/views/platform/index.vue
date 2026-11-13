@@ -4,11 +4,13 @@
         <div v-if="isRouterAlive" class="platform-route-outlet">
             <RouterView />
         </div>
-        <!-- WeKnora 助手：停靠时作为布局右栏挤压页面，悬浮时浮在页面上；都不加遮罩，
-             跨页面保留会话，从侧栏、右侧边缘按钮或命令面板唤出（设置里可选） -->
-        <AssistantPanel />
-        <AssistantLauncher />
-        <AssistantPageBridge />
+        <!-- 助手由 edition.ts 的 nav.assistant 统一门控：后端为旧版镜像时整体
+             不挂载，浮动入口、选中气泡与页面填充提示都不会唤起不存在的 API -->
+        <template v-if="assistantEnabled">
+            <AssistantPanel />
+            <AssistantLauncher />
+            <AssistantPageBridge />
+        </template>
         <div class="upload-mask" v-show="ismask">
             <UploadMask></UploadMask>
         </div>
@@ -19,7 +21,7 @@
         <!-- 知识库文件上传进度浮层：上传队列放在 store 里，切换页面不中断 -->
         <UploadTasksPanel />
         <!-- 带遮罩层的新手引导：首次进入自动开启，可从用户菜单顶部昵称旁帮助按钮重新打开 -->
-        <NewUserGuide />
+        <NewUserGuide :assistant-guide-enabled="assistantEnabled" />
     </div>
 </template>
 <script setup lang="ts">
@@ -41,6 +43,13 @@ import { getKnowledgeBaseById } from '@/api/knowledge-base/index'
 import { MessagePlugin } from 'tdesign-vue-next'
 import { useI18n } from 'vue-i18n'
 import { collectDroppedFiles } from './collectDroppedFiles'
+import { isFeatureEnabled } from '@/config/edition'
+import { markAssistantEntryGuideDone } from '@/config/contextualGuides'
+
+// 0.9.0 助手/自动化依赖新后端接口；定制版后端沿用旧版官方镜像，先整体关闭。
+// 标记助手引导为已完成，避免它阻塞依赖 isGlobalUserGuideDone() 的页面级引导。
+const assistantEnabled = isFeatureEnabled('nav.assistant')
+if (!assistantEnabled) markAssistantEntryGuideDone()
 
 const route = useRoute();
 const router = useRouter();

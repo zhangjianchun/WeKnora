@@ -450,7 +450,7 @@
                                 })
                                 }}</span>
                               </div>
-                              <AssistantButton v-if="props.canEdit"
+                              <AssistantButton v-if="props.canEdit && isFeatureEnabled('nav.assistant')"
                                 :label="$t('knowledgeEditor.wikiBrowser.issueFixBtn')" @click="triggerAutoFix" />
                             </div>
                             <div class="wiki-issue-popup-list">
@@ -482,7 +482,8 @@
                                         }) }}
                                     </span>
                                     <div v-if="props.canEdit" class="wiki-issue-popup-actions">
-                                      <AssistantButton :label="$t('knowledgeEditor.wikiBrowser.issueFixSingle')"
+                                      <AssistantButton v-if="isFeatureEnabled('nav.assistant')"
+                                        :label="$t('knowledgeEditor.wikiBrowser.issueFixSingle')"
                                         @click="triggerFixIssue(issue)" />
                                       <span class="wiki-issue-popup-action"
                                         style="color: var(--td-text-color-placeholder);"
@@ -541,8 +542,8 @@
                         </t-button>
                       </template>
                       <template v-else>
-                        <AssistantActionsButton icon-only :label="$t('assistant.actions.readContent')"
-                          :actions="readingAssistantActions" />
+                        <AssistantActionsButton v-if="isFeatureEnabled('nav.assistant')" icon-only
+                          :label="$t('assistant.actions.readContent')" :actions="readingAssistantActions" />
                         <t-tooltip v-if="props.canEdit" :content="$t('knowledgeEditor.wikiBrowser.editBtn')"
                           placement="top">
                           <button type="button" class="wiki-action-btn"
@@ -830,6 +831,7 @@ import { resolveWikiBacklinkTitle } from './wikiBacklinkTitles'
 import { buildGraphLayout, graphNodeRadius, stepGraphLayout, visibleGraphLabels, graphPointBounds, initialGraphViewport, graphClusterOutline, graphLandmarkTitle, type GraphBounds, type GraphCluster } from './wikiGraphLayout'
 import { getKnowledgeDetails } from '@/api/knowledge-base'
 import { useAssistantStore } from '@/stores/assistant'
+import { isFeatureEnabled } from '@/config/edition'
 import AssistantButton from '@/components/assistant/AssistantButton.vue'
 import AssistantActionsButton from '@/components/assistant/AssistantActionsButton.vue'
 import { useAssistantPageContext } from '@/composables/useAssistantPageContext'

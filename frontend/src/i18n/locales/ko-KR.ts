@@ -8985,7 +8985,7 @@ export default {
     }
   },
   assistantEntryGuide: {
-    stepOf: 'v0.9.0의 새로운 기능',
+    stepOf: '새로운 기능',
     skip: '알겠습니다',
     interactHint: '강조된 아이콘을 클릭해 어시스턴트를 열어 보세요.',
   },

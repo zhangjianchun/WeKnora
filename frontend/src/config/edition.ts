@@ -82,18 +82,19 @@ const FEATURE_MATRIX: Record<FeatureKey, Record<Edition, boolean>> = {
   'nav.toolbox':     { lite: false, pro: false, enterprise: false },  // 工具箱（沙箱 bug 隐藏）
   'nav.artifact':    { lite: false, pro: false, enterprise: false },  // 产物（隐藏）
   'nav.sharedSpace': { lite: false, pro: true,  enterprise: true  },  // 共享空间（pro+）
-  // --- 0.9.0 新增，先全部版本可用 ---
-  'nav.assistant':   { lite: true,  pro: true,  enterprise: true  },  // Logo 旁 / 折叠态助手入口
-  'nav.automations': { lite: true,  pro: true,  enterprise: true  },  // 自动化导航
+  // --- 0.9.0 新增：后端仍用旧版官方镜像，助手/自动化 API 不存在（400 / 404）---
+  // 换成 0.9.0 后端镜像后，把本文件里这几组 0.9.0 开关改回 true 即可整体恢复。
+  'nav.assistant':   { lite: false, pro: false, enterprise: false },  // Logo 旁 / 折叠态助手入口
+  'nav.automations': { lite: false, pro: false, enterprise: false },  // 自动化导航
 
   // ═══════════════ 系统设置 ═══════════════
   // --- 基础（所有版本）---
   'settings.ollama':          { lite: true,  pro: true,  enterprise: true  },  // Ollama（本地部署核心）
   'settings.members':         { lite: true, pro: true,  enterprise: true  },  // 成员管理
   'settings.websearch':       { lite: true, pro: true,  enterprise: true  },  // 网络搜索（会出域，lite 不给）（添加搜索引擎设置多个搜索工具
-  // --- 0.9.0 新增，先全部版本可用 ---
-  'settings.assistant':       { lite: true, pro: true,  enterprise: true  },  // 助手设置
-  'settings.defaults':        { lite: true, pro: true,  enterprise: true  },  // 空间默认模型
+  // --- 0.9.0 新增 ---
+  'settings.assistant':       { lite: false, pro: false, enterprise: false },  // 助手设置（依赖助手后端，随 nav.assistant 一起关）
+  'settings.defaults':        { lite: true,  pro: true,  enterprise: true  },  // 空间默认模型（与助手无关，保留）
 
   // --- 进阶（pro+）---
   'settings.personalMemory':  { lite: false, pro: true,  enterprise: true  },  // 我的记忆
@@ -150,10 +151,10 @@ const FEATURE_MATRIX: Record<FeatureKey, Record<Edition, boolean>> = {
   // --- 彻底隐藏 ---
   'agent.skills':       { lite: false, pro: false, enterprise: false },  // 技能（沙箱 bug）
 
-  // ═══════════════ 0.9.0 助手之上的能力，先全部版本可用 ═══════════════
-  'assistant.collaboration': { lite: true, pro: true, enterprise: true },  // 多智能体协作
-  'assistant.automations':   { lite: true, pro: true, enterprise: true },  // 自动化任务
-  'assistant.approvals':     { lite: true, pro: true, enterprise: true },  // 执行权限与审批
+  // ═══════════════ 0.9.0 助手之上的能力（依赖助手后端，随总开关关闭）═══════════════
+  'assistant.collaboration': { lite: false, pro: false, enterprise: false },  // 多智能体协作
+  'assistant.automations':   { lite: false, pro: false, enterprise: false },  // 自动化任务
+  'assistant.approvals':     { lite: false, pro: false, enterprise: false },  // 执行权限与审批
 }
 
 // -------- 消费方 section key → feature key 映射 --------

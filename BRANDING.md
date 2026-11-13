@@ -156,9 +156,15 @@ i18n 文件只改 value，不改 key。
 
 ### 品牌泄漏收口（同日）
 
-- **内置助手的产品文档检索已默认关闭**：`internal/application/service/agent_service.go` 的 `registerProductDocTools()` 增加 `AIRAG_ENABLE_PRODUCT_DOCS` 开关，默认不注册 `search_weknora_docs` / `read_weknora_doc`。这是分支上**唯一一处后端源码改动**——交付包只含预编译二进制，覆盖层在打包阶段已无法影响它，维护方式见 `branding-overrides/README.md`「构建期定制」。
-- **不要删空 `website-docs/`**：`website-docs/embed.go` 用 `//go:embed 0*/*.md` 把 74 篇文档编进服务端，删空会让 `go build` 报 `no matching files found`，`docsUrl.test.ts` 也会失败。保留目录、在工具注册入口关掉是最小侵入做法。
-- 助手入口仍按门控全版本可用，只是不再引用官方文档；将来换成自有文档后，在 `.env` 设 `AIRAG_ENABLE_PRODUCT_DOCS=1` 恢复。
+- **助手入口整体隐藏才是有效防线**：定制版后端直接用旧版官方镜像（只改镜像名、不编译 Go），后端源码开关不会进入交付二进制。上一轮加在 `registerProductDocTools()` 的 `AIRAG_ENABLE_PRODUCT_DOCS` 已回滚，`agent_service.go` 回到官方 v0.9.0 原文，env 覆盖物里的同名变量也一并移除；详见 `branding-overrides/README.md`「前端功能门控」。
+- **不要删空 `website-docs/`**：`website-docs/embed.go` 用 `//go:embed 0*/*.md` 把 74 篇文档编进服务端，删空会让 `go build` 报 `no matching files found`，`docsUrl.test.ts` 也会失败。内置文档含上游品牌与官方站点链接，靠 `edition.ts` 关闭助手面板 / 浮动入口 / 引导弹框兜住。
 - 清掉 3 处官方文档外链：`ModelEditorDialog.vue`（compat 文档）、`SandboxConfigEditorDrawer.vue`（集群搭建指南，两处）、`SystemInfo.vue`（迁移排障文档 + 上游 GitHub issue 上报）。微信开发者文档、E2B 控制台等第三方服务商链接保留；迁移失败仍显示完整错误详情。
 - 修复：`.env.lite.example` 覆盖物此前被 `.gitignore` 的 `.*` 规则忽略、从未入库，导致 lite 包会拿到官方模板；已加例外规则。
 - **CLI 集成**：`settings.integrationCli` 属 edition.ts「彻底隐藏」组，全版本 `false`，导航过滤与深链守卫都已封住，客户进不去该页。`CliIntegrationLanding.vue` 的安装命令已把官方仓库地址换成自有仓库 `https://github.com/zhangjianchun/WeKnora.git`，避免打包产物里残留官方地址；`cd WeKnora/cli` 目录名与 `weknora` 二进制名保持不变（与 fork 仓库一致）。若以后要放开入口，需先确认自有仓库对客户可访问并补齐配套 CLI 说明。
+
+### 0.9.0 新功能按后端能力回退（同日）
+
+- 实测组合：前端 `npm run dev` + 旧版官方后端镜像。助手提问报「流式连接失败: HTTP 400」、自动化报「404 page not found」——`/api/v1/agent-chat`、`/api/v1/automations` 在旧后端不存在，前端无法修补。
+- `edition.ts` 把 6 个 0.9.0 新功能开关设为全版本 `false`；`platform/index.vue` 用 `v-if` 整体不挂载 `AssistantPanel` / `AssistantLauncher` / `AssistantPageBridge`。菜单两处入口、命令面板（原本已注释）、聊天「问助手」、Wiki / 文档 / 知识库的助手动作按钮全部收口。
+- 助手「新功能」引导弹框（含 `v0.9.0 新功能` 字样）不再弹出：`NewUserGuide.vue` 增加 `assistantGuideEnabled` prop（默认 `true`，上游单测行为不变），由 `platform/index.vue` 按开关传入；同时调 `markAssistantEntryGuideDone()`，避免该引导标记缺失把页面级情境引导一起卡住。6 种语言的 `assistantEntryGuide.stepOf` 已去掉上游版本号。
+- 后端镜像升级到 0.9.0 后，把 `edition.ts` 对应几行改回 `true` 即可整体恢复，门控接线都还在。

@@ -1,10 +1,11 @@
 <template>
-  <AssistantButton v-if="assistant.pageAccess" :label="label" :icon-only="iconOnly" :disabled="disabled"
+  <AssistantButton v-if="assistant.pageAccess && isFeatureEnabled('nav.assistant')" :label="label" :icon-only="iconOnly" :disabled="disabled"
     @click.stop="openAssistant" />
 </template>
 
 <script setup lang="ts">
 import { nextTick } from 'vue'
+import { isFeatureEnabled } from '@/config/edition'
 import { useAssistantStore, type AssistantContextAction, type AssistantPageSelection } from '@/stores/assistant'
 import AssistantButton from './AssistantButton.vue'
 

@@ -4,6 +4,16 @@ export const GLOBAL_USER_GUIDE_KEY = 'weknora:new-user-guide-done:v1'
 export const ASSISTANT_ENTRY_GUIDE_KEY = 'weknora:assistant-entry-guide-done:v0.9.0'
 export const OPEN_NEW_USER_GUIDE_EVENT = 'weknora:open-new-user-guide'
 
+/**
+ * 定制版：助手入口由 edition.ts 关闭时跳过介绍助手的「新功能」引导
+ * （文案带上游版本号）。页面级情境引导要等 isGlobalUserGuideDone() 为
+ * true 才会展示，所以必须把这条助手引导标记为「已完成」，
+ * 否则它会把其它所有引导一起永久卡住。
+ */
+export function markAssistantEntryGuideDone() {
+  localStorage.setItem(ASSISTANT_ENTRY_GUIDE_KEY, '1')
+}
+
 export function openNewUserGuide() {
   window.dispatchEvent(new CustomEvent(OPEN_NEW_USER_GUIDE_EVENT))
 }

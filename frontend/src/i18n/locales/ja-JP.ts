@@ -610,7 +610,7 @@ export default {
     }
   },
   assistantEntryGuide: {
-    stepOf: 'v0.9.0 の新機能',
+    stepOf: '新機能',
     skip: 'わかりました',
     interactHint: '強調表示された入口をクリックしてアシスタントを開いてみましょう。',
   },

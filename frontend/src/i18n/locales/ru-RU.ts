@@ -8985,7 +8985,7 @@ export default {
     }
   },
   assistantEntryGuide: {
-    stepOf: 'НОВОЕ В v0.9.0',
+    stepOf: 'НОВОЕ',
     skip: 'Понятно',
     interactHint: 'Нажмите выделенную кнопку, чтобы открыть помощника.',
   },
