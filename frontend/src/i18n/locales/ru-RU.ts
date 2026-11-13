@@ -4463,20 +4463,24 @@ export default {
             true: 'Включено',
             false: 'Отключено'
           },
-          'auth.registration_mode': {
-            invite_only: 'Только по приглашению',
-            self_serve: 'Самообслуживание',
-            invite_register: 'Регистрация по приглашению'
+          auth: {
+            registration_mode: {
+              invite_only: 'Только по приглашению',
+              self_serve: 'Самообслуживание',
+              invite_register: 'Регистрация по приглашению'
+            },
+            default_tenant_mode: {
+              create_personal: 'Создать личное пространство',
+              tenantless: 'Не создавать пространство'
+            }
           },
-          'user.role': {
-            viewer: 'Наблюдатель',
-            contributor: 'Редактор',
-            admin: 'Администратор',
-            owner: 'Владелец'
-          },
-          'auth.default_tenant_mode': {
-            create_personal: 'Создать личное пространство',
-            tenantless: 'Не создавать пространство'
+          user: {
+            role: {
+              viewer: 'Наблюдатель',
+              contributor: 'Редактор',
+              admin: 'Администратор',
+              owner: 'Владелец'
+            }
           }
         },
         errors: {

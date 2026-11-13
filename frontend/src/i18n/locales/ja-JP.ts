@@ -5251,20 +5251,24 @@ export default {
             true: '有効',
             false: '無効'
           },
-          'auth.registration_mode': {
-            invite_only: '招待のみ',
-            self_serve: 'セルフサービス',
-            invite_register: '招待登録'
+          auth: {
+            registration_mode: {
+              invite_only: '招待のみ',
+              self_serve: 'セルフサービス',
+              invite_register: '招待登録'
+            },
+            default_tenant_mode: {
+              create_personal: '個人ワークスペースを作成',
+              tenantless: 'ワークスペースを作成しない'
+            }
           },
-          'user.role': {
-            viewer: '閲覧者',
-            contributor: '編集者',
-            admin: '管理者',
-            owner: '所有者'
-          },
-          'auth.default_tenant_mode': {
-            create_personal: '個人ワークスペースを作成',
-            tenantless: 'ワークスペースを作成しない'
+          user: {
+            role: {
+              viewer: '閲覧者',
+              contributor: '編集者',
+              admin: '管理者',
+              owner: '所有者'
+            }
           }
         },
         columns: {

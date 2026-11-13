@@ -5251,20 +5251,24 @@ export default {
             true: 'Enabled',
             false: 'Disabled'
           },
-          'auth.registration_mode': {
-            invite_only: 'Invite only',
-            self_serve: 'Self-service',
-            invite_register: 'Invitation registration'
+          auth: {
+            registration_mode: {
+              invite_only: 'Invite only',
+              self_serve: 'Self-service',
+              invite_register: 'Invitation registration'
+            },
+            default_tenant_mode: {
+              create_personal: 'Create personal workspace',
+              tenantless: 'Do not create a workspace'
+            }
           },
-          'user.role': {
-            viewer: 'Viewer',
-            contributor: 'Editor',
-            admin: 'Admin',
-            owner: 'Owner'
-          },
-          'auth.default_tenant_mode': {
-            create_personal: 'Create personal workspace',
-            tenantless: 'Do not create a workspace'
+          user: {
+            role: {
+              viewer: 'Viewer',
+              contributor: 'Editor',
+              admin: 'Admin',
+              owner: 'Owner'
+            }
           }
         },
         columns: {

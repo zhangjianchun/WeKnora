@@ -4463,20 +4463,24 @@ export default {
             true: '사용',
             false: '사용 안 함'
           },
-          'auth.registration_mode': {
-            invite_only: '초대 전용',
-            self_serve: '셀프 서비스',
-            invite_register: '초대 가입'
+          auth: {
+            registration_mode: {
+              invite_only: '초대 전용',
+              self_serve: '셀프 서비스',
+              invite_register: '초대 가입'
+            },
+            default_tenant_mode: {
+              create_personal: '개인 작업 공간 생성',
+              tenantless: '작업 공간 생성 안 함'
+            }
           },
-          'user.role': {
-            viewer: '뷰어',
-            contributor: '편집자',
-            admin: '관리자',
-            owner: '소유자'
-          },
-          'auth.default_tenant_mode': {
-            create_personal: '개인 작업 공간 생성',
-            tenantless: '작업 공간 생성 안 함'
+          user: {
+            role: {
+              viewer: '뷰어',
+              contributor: '편집자',
+              admin: '관리자',
+              owner: '소유자'
+            }
           }
         },
         errors: {

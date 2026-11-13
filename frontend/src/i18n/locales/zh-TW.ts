@@ -4465,20 +4465,24 @@ export default {
             true: '開啟',
             false: '關閉'
           },
-          'auth.registration_mode': {
-            invite_only: '僅限邀請',
-            self_serve: '開放自助註冊',
-            invite_register: '僅限邀請註冊'
+          auth: {
+            registration_mode: {
+              invite_only: '僅限邀請',
+              self_serve: '開放自助註冊',
+              invite_register: '僅限邀請註冊'
+            },
+            default_tenant_mode: {
+              create_personal: '自動建立個人空間',
+              tenantless: '不自動建立空間'
+            }
           },
-          'user.role': {
-            viewer: '唯讀成員',
-            contributor: '編輯成員',
-            admin: '管理員',
-            owner: '擁有者'
-          },
-          'auth.default_tenant_mode': {
-            create_personal: '自動建立個人空間',
-            tenantless: '不自動建立空間'
+          user: {
+            role: {
+              viewer: '唯讀成員',
+              contributor: '編輯成員',
+              admin: '管理員',
+              owner: '擁有者'
+            }
           }
         },
         errors: {
