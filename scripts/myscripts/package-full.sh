@@ -58,6 +58,10 @@ for EDITION in "${EDITIONS[@]}"; do
     fi
 
     [ -d "$SRC/config" ] && { mkdir -p config; cp -r "$SRC/config/"* config/ 2>/dev/null || true; }
+    # 应用非前端品牌覆盖物（中文提示词、构建加速、env 模板等）
+    if [ -f "$SRC/branding-overrides/apply.sh" ]; then
+        bash "$SRC/branding-overrides/apply.sh" "$PKG_DIR"
+    fi
     [ -d "$SRC/docker/searxng" ] && { mkdir -p docker/searxng; cp -r "$SRC/docker/searxng/"* docker/searxng/ 2>/dev/null || true; }
     [ -d "$SRC/misc" ] && { mkdir -p misc; cp -r "$SRC/misc/"* misc/ 2>/dev/null || true; }
     [ -f "$SRC/LICENSE" ] && cp "$SRC/LICENSE" .

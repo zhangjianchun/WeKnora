@@ -35,7 +35,15 @@ cp -r "$SRC/config" .
 cp -r "$SRC/migrations" .
 mkdir -p web
 cp -r "$SRC/frontend/dist/"* web/
-cp "$SRC/.env.lite.example" .env
+# 应用非前端品牌覆盖物，并用品牌版模板生成 .env
+if [ -f "$SRC/branding-overrides/apply.sh" ]; then
+    bash "$SRC/branding-overrides/apply.sh" .
+fi
+if [ -f .env.lite.example ]; then
+    cp .env.lite.example .env
+else
+    cp "$SRC/.env.lite.example" .env
+fi
 
 if [ -d "$GOJIEBA_DICT" ]; then
     mkdir -p gojieba-dict

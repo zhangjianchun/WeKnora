@@ -22,14 +22,17 @@ templates:
         description: "回答できないことを丁寧に伝え、提案を提示するメッセージ"
     default: true
     content: |
-      抱歉，我在知识库中没有找到与您的问题直接相关的内容。
+      Sorry, I could not find content directly related to your question in the knowledge base.
 
-      您可以尝试：
-      1. 换一种方式表述您的问题
-      2. 提供更具体的信息
-      3. 咨询相关领域的专业人士
+      You can try:
+      1. Rephrasing your question in a different way
+      2. Providing more specific information
+      3. Consulting a professional in the relevant field
 
-      如果您还有其他问题，我很乐意继续为您提供帮助。
+      If you have other questions, I'm happy to continue helping you.
+
+      ## CRITICAL: Language Rule
+      - ALWAYS respond in {{language}}
 
   - id: "polite_fallback"
     name: "Polite Fallback"
@@ -48,16 +51,19 @@ templates:
         name: "丁寧なフォールバック"
         description: "より丁寧で詳細な回答不可メッセージ"
     content: |
-      非常抱歉，我目前无法准确回答您的问题。这可能是因为：
-      - 您的问题超出了我的知识范围
-      - 知识库中暂时还没有收录相关内容
+      I'm sorry, I'm currently unable to provide an accurate answer to your question. This may be because:
+      - The question is beyond my knowledge scope
+      - The knowledge base does not yet contain relevant content
 
-      建议您：
-      1. 尝试使用不同的关键词重新提问
-      2. 将问题拆分成更具体的小问题
-      3. 联系客户支持人员获取帮助
+      Suggestions:
+      1. Try rephrasing with different keywords
+      2. Break down your question into more specific sub-questions
+      3. Contact customer support for assistance
 
-      感谢您的理解，期待能在其他问题上继续为您服务！
+      Thank you for your understanding, and I look forward to helping you with other questions!
+
+      ## CRITICAL: Language Rule
+      - ALWAYS respond in {{language}}
 
   - id: "brief_fallback"
     name: "Brief Fallback"
@@ -75,7 +81,7 @@ templates:
       ja-JP:
         name: "簡潔なフォールバック"
         description: "短い回答不可メッセージ"
-    content: "抱歉，我暂时无法回答这个问题。请尝试换个说法重新提问，或联系客户支持。"
+    content: "Sorry, I'm unable to answer this question at the moment. Please try rephrasing your question, or contact customer support."
 
   # --- Model fallback prompt templates (for fallback_strategy = "model") ---
   - id: "model_fallback"
@@ -96,20 +102,20 @@ templates:
         description: "一般知識に基づいて回答するようモデルを誘導するプロンプト"
     mode: "model"
     content: |
-      检索没有找到与用户问题直接匹配的内容。不过，知识库中包含以下文档：
+      No content directly matched the user's query via search. However, the knowledge base contains the following documents:
 
       {{kb_documents}}
 
-      重要说明：
-      1. 如果上面的文档列表可用，请借助它来回答用户的问题（例如：列出相关文档，提示哪些文档可能包含用户需要的信息）
-      2. 如果文档列表为空，请运用你的通用知识作答，并明确告知用户该回答并非来自知识库
-      3. 如果问题涉及特定专业领域或需要最新信息，建议用户查阅官方资源
-      4. 回答时保持准确、客观
+      Important Notes:
+      1. If the document listing above is available, use it to help answer the user's question (e.g., list relevant documents, suggest which documents may contain the information they need)
+      2. If the document listing is empty, use your general knowledge and clearly inform the user that the answer is not from the knowledge base
+      3. If the question involves specific domains or requires the latest information, suggest the user consult official resources
+      4. Maintain accuracy and objectivity in the response
 
       ## CRITICAL: Language Rule
       - ALWAYS respond in {{language}}
 
-      用户问题：{{query}}
+      User question: {{query}}
 
   - id: "default_fallback_prompt"
     name: "Standard Fallback Prompt"
@@ -129,19 +135,19 @@ templates:
         description: "ナレッジベースに関連する結果がない場合にモデルへ委ねるデフォルトのプロンプト"
     mode: "model"
     content: |
-      你是 AI知识库，一个专业而友善的 AI 助手。
+      You are WeKnora, a professional and friendly AI assistant developed by Tencent.
 
-      检索没有找到与用户问题直接匹配的内容。不过，知识库中包含以下文档：
+      No content directly matched the user's query via search. However, the knowledge base contains the following documents:
 
       {{kb_documents}}
 
-      ## 回答要求
-      - 将文档列表视为元数据：它可以用来识别标题或提示相关文档，但不能据此总结未读文档的内容，也不能支撑详细的事实性结论。
-      - 如果文档列表为空或与问题无关，请基于你的通用知识回答用户的问题，并明确告知用户该回答并非来自知识库。
-      - 回答简洁、清晰、言之有物。
-      - 不要猜测无法获取的时事或私密事实。当证据缺失影响回答时，要具体说明缺了什么证据。
-      - 语气礼貌、专业。
+      ## Response Requirements
+      - Treat the document listing as metadata: it can identify titles or suggest relevant documents, but cannot support a summary of unread contents or detailed factual claims.
+      - If the document listing is empty or not relevant, answer the user's question based on your general knowledge and clearly inform the user that the answer is not from the knowledge base
+      - Be concise, clear, and substantive
+      - Do not guess unavailable current or private facts. Explain the specific evidence gap when it affects the answer.
+      - Use a polite and professional tone
       - Default response language: {{language}}; follow an explicit request for another language.
 
-      ## 用户的问题：
+      ## User's question:
       {{query}}

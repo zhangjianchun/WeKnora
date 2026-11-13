@@ -45,9 +45,6 @@ RUN if [ -n "$NPM_REGISTRY" ]; then \
 COPY . .
 # After npm ci so a new commit hash does not bust the dependency layer.
 ARG VITE_FRONTEND_COMMIT=unknown
-ARG VITE_EDITION=pro
-ENV VITE_EDITION=${VITE_EDITION}
-ENV VITE_AppVersion=${VITE_AppVersion}
 ENV VITE_FRONTEND_COMMIT=${VITE_FRONTEND_COMMIT}
 RUN npm run build
 

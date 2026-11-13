@@ -51,6 +51,10 @@ cp "$SRC/WeKnora-lite" "$BUILD_CTX/"
 cp "$SRC/docreader/dist/docreader-server" "$BUILD_CTX/"
 cp -r "$SRC/frontend/dist" "$BUILD_CTX/web"
 cp -r "$SRC/config" "$BUILD_CTX/"
+# 应用非前端品牌覆盖物（中文提示词、构建加速、env 模板等）
+if [ -f "$SRC/branding-overrides/apply.sh" ]; then
+  bash "$SRC/branding-overrides/apply.sh" "$BUILD_CTX"
+fi
 cp -r "$SRC/migrations" "$BUILD_CTX/"
 
 GOJIEBA_DICT="${HOME}/go/pkg/mod/github.com/yanyiwu/gojieba@v1.4.7/deps/cppjieba/dict"
