@@ -81,15 +81,19 @@ func (a *App) GetDesktopListenPublicActive() bool {
 	return a.listenPublic
 }
 
-// CheckForUpdates is intentionally disabled in branded builds. The upstream
-// Tencent/WeKnora release would overwrite the rebranded app (icons, database
-// name, menus), so no update check/download is performed. The method is kept
-// as a no-op so existing frontend bindings remain valid.
-func (a *App) CheckForUpdates() {}
+// CheckForUpdates manually triggers the update check from the frontend.
+func (a *App) CheckForUpdates() {
+	if a.ctx != nil {
+		checkUpdate(a.ctx, desktopAboutVersion(), true, false)
+	}
+}
 
-// AutoCheckForUpdates is intentionally disabled in branded builds (see
-// CheckForUpdates). Kept as a no-op for frontend binding compatibility.
-func (a *App) AutoCheckForUpdates() {}
+// AutoCheckForUpdates silently checks for updates and downloads them.
+func (a *App) AutoCheckForUpdates() {
+	if a.ctx != nil {
+		checkUpdate(a.ctx, desktopAboutVersion(), false, true)
+	}
+}
 
 // GetAutoSetupToken exposes the per-process capability only through the native bridge.
 func (a *App) GetAutoSetupToken() string { return a.setupToken }
