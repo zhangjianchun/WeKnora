@@ -23,7 +23,7 @@
 export type Edition = 'lite' | 'pro' | 'enterprise'
 
 /** 交付时改这一行：'lite' | 'pro' | 'enterprise' */
-export const CURRENT_EDITION: Edition = 'enterprise'
+export const CURRENT_EDITION: Edition = 'lite'
 
 // -------- 功能 key 定义 --------
 // 新增受控功能时：① 在这里加 key；② 在 FEATURE_MATRIX 里加对应一行；③ 在对应 section 映射表登记
