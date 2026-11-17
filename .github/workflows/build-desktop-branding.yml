@@ -9,6 +9,17 @@ name: Build Branded Desktop (Windows / macOS / Linux)
 
 on:
   workflow_dispatch:
+    inputs:
+      target:
+        description: '要构建的平台（macOS runner 偶发不可用时可单独重试）'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - windows
+          - macos
+          - linux
 
 concurrency:
   group: build-desktop-branding-${{ github.ref }}
@@ -28,6 +39,7 @@ env:
 jobs:
   build-windows:
     name: Windows amd64 desktop
+    if: ${{ inputs.target == 'all' || inputs.target == 'windows' }}
     runs-on: windows-latest
     timeout-minutes: 60
     steps:
@@ -199,6 +211,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────
   build-macos:
     name: macOS universal desktop
+    if: ${{ inputs.target == 'all' || inputs.target == 'macos' }}
     # macos-14 是官方 release-lite.yml 使用的 runner，历史上 universal 构建成功过。
     # 若某时段 GitHub 免费账户 macOS runner 排队/额度紧张，job 会长时间 queued 或秒取消，
     # 属平台资源问题，非构建配置问题；资源恢复后重跑此 job 即可。
@@ -344,6 +357,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────
   build-linux:
     name: Linux amd64 desktop
+    if: ${{ inputs.target == 'all' || inputs.target == 'linux' }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
