@@ -1,7 +1,7 @@
 name: Build Branded Desktop (Windows)
 
 # 手动触发：在 branding 分支打「AI知识库」桌面客户端（绿色版 exe + NSIS 安装包）。
-# 复用官方 release-lite.yml 的 Windows 桌面构建配方（Go 1.24 + Wails + NSIS），
+# 复用官方 release-lite.yml 的 Windows 桌面构建配方（Go 1.26 + Wails + NSIS），
 # 只在 CI runner 上临时改应用名，不改动仓库源码。
 
 on:
@@ -15,7 +15,7 @@ permissions:
   contents: read
 
 env:
-  GO_VERSION: "1.24"
+  GO_VERSION: "1.26"
   NODE_VERSION: "22"
   APP_NAME: "AI知识库"
   EDITION: lite
@@ -41,7 +41,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install Wails CLI
-        # 钉死到 go.mod 使用的 v2.12.0：@latest 已到 v2.17.1，要求 Go>=1.26，与本项目 Go 1.24 冲突
+        # 钉死到 go.mod 使用的 v2.12.0，避免 @latest 漂移带来的版本不确定性
         run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
 
       - name: Install NSIS
