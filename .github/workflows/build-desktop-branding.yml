@@ -1,7 +1,10 @@
-name: Build Branded Desktop (Windows)
+name: Build Branded Desktop (Windows / macOS / Linux)
 
-# 手动触发：在 branding 分支打「AI知识库」桌面客户端（绿色版 exe + NSIS 安装包）。
-# 复用官方 release-lite.yml 的 Windows 桌面构建配方（Go 1.26 + Wails + NSIS），
+# 手动触发：在 branding 分支打「AI知识库」桌面客户端。
+#   - Windows: 绿色版 zip + NSIS 安装包
+#   - macOS:   universal .app 打进 DMG（Intel + Apple Silicon）
+#   - Linux:   amd64 绿色版 tar.gz
+# 复用官方 release-lite.yml 的桌面构建配方（Go 1.26 + Wails），
 # 只在 CI runner 上临时改应用名，不改动仓库源码。
 
 on:
@@ -186,5 +189,280 @@ jobs:
           path: |
             ./${{ env.APP_NAME }}_*.zip
             ./${{ env.APP_NAME }}_*.exe
+            ./${{ env.APP_NAME }}_*.sha256
+          retention-days: 7
+
+  # ─────────────────────────────────────────────────────────────
+  # macOS：universal .app（Intel + Apple Silicon）打进 DMG
+  # 复用官方 release-lite.yml 的 darwin/universal 配方。
+  # ─────────────────────────────────────────────────────────────
+  build-macos:
+    name: macOS universal desktop
+    runs-on: macos-14
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Wails CLI
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
+
+      - name: Brand app name (runner-only, no repo changes)
+        shell: bash
+        run: |
+          APP="${{ env.APP_NAME }}"
+          # macOS 自带 sed 的 -i 需要空参数，用 perl 跨平台替换更稳
+          for f in \
+            cmd/desktop/main.go \
+            cmd/desktop/main_bindings.go \
+            cmd/desktop/prefs.go \
+            cmd/desktop/signing_key.go \
+            cmd/desktop/update.go \
+            cmd/desktop/wails.json; do
+            perl -pi -e "s/WeKnora Lite/${APP}/g" "$f"
+          done
+          grep '"name"' cmd/desktop/wails.json | head -1
+
+      - name: Build frontend
+        shell: bash
+        run: |
+          cd frontend
+          npm ci --prefer-offline
+          VITE_AppVersion="v$(tr -d '\n\r' < ../VERSION)" npm run build
+          cd ..
+          rm -rf web
+          cp -r frontend/dist web
+          grep -o '<title>[^<]*</title>' web/index.html
+
+      - name: Prepare sqlite3.h for sqlite-vec cgo
+        shell: bash
+        run: |
+          go mod download github.com/mattn/go-sqlite3
+          SQLITE_DIR="$(go list -m -f '{{.Dir}}' github.com/mattn/go-sqlite3)"
+          INC="$RUNNER_TEMP/weknora-cgo-include"
+          mkdir -p "$INC"
+          cp "$SQLITE_DIR/sqlite3-binding.h" "$INC/sqlite3.h"
+          cp "$SQLITE_DIR/sqlite3ext.h" "$INC/" 2>/dev/null || true
+          echo "CGO_CFLAGS=-Wno-deprecated-declarations -I$INC" >> "$GITHUB_ENV"
+          echo "sqlite3.h prepared at $INC"
+
+      - name: Build desktop app (Wails universal)
+        shell: bash
+        run: |
+          export EDITION="${{ env.EDITION }}"
+          export GOLANG_PROTOBUF_REGISTRATION_CONFLICT=warn
+          eval "$(./scripts/get_version.sh env)"
+          LDFLAGS="$(./scripts/get_version.sh ldflags) -X 'google.golang.org/protobuf/reflect/protoregistry.conflictPolicy=warn'"
+          # macOS 链接器对重复库只警告，不报错
+          export CGO_LDFLAGS="-Wl,-no_warn_duplicate_libraries"
+          bash ./scripts/check-license-bundle.sh
+          cd cmd/desktop
+          # 前端已独立构建，绑定文件已在仓库，跳过 Wails 内部重建/绑定生成/mod tidy
+          wails build -clean \
+            -skipbindings \
+            -s \
+            -m \
+            -tags "sqlite_fts5" \
+            -platform darwin/universal \
+            -ldflags="${LDFLAGS}" \
+            -o "${{ env.APP_NAME }}"
+
+      - name: Package macOS app into DMG
+        shell: bash
+        run: |
+          set -e
+          APP="${{ env.APP_NAME }}"
+          VER="$(tr -d '\n\r' < VERSION)"
+          BIN="cmd/desktop/build/bin"
+          APP_BUNDLE="${APP}.app"
+          test -d "$BIN/${APP_BUNDLE}" || { echo "app bundle not found: $BIN/${APP_BUNDLE}" >&2; ls -la "$BIN"; exit 1; }
+
+          # macOS .app 结构：可执行文件在 Contents/MacOS/<App>，资源通常在 Contents/Resources
+          CONTENTS="$BIN/${APP_BUNDLE}/Contents"
+          MACOS_DIR="$CONTENTS/MacOS"
+          RESOURCES="$CONTENTS/Resources"
+          mkdir -p "$RESOURCES/config" "$RESOURCES/migrations/sqlite" "$RESOURCES/web"
+
+          # 后端按相对工作目录读取 config/migrations/web/.env，全部放进 Resources
+          cp .env.lite.example "$RESOURCES/.env"
+          sed -i '' 's/^DISABLE_REGISTRATION=.*/DISABLE_REGISTRATION=true/' "$RESOURCES/.env"
+          cp -r config/* "$RESOURCES/config/"
+          cp -r migrations/sqlite/* "$RESOURCES/migrations/sqlite/"
+          cp -r web/* "$RESOURCES/web/"
+          bash ./scripts/copy-licenses.sh "$RESOURCES" 2>/dev/null || true
+
+          # jieba 词典：newJieba() 读可执行文件同目录 dict/（macOS 是 Contents/MacOS/）
+          JIEBA_DIR="$(go list -m -f '{{.Dir}}' github.com/yanyiwu/gojieba)/deps/cppjieba/dict"
+          test -f "$JIEBA_DIR/jieba.dict.utf8" || { echo "jieba dict not found" >&2; exit 1; }
+          mkdir -p "$MACOS_DIR/dict"
+          cp "$JIEBA_DIR"/*.utf8 "$MACOS_DIR/dict/"
+          # 同时在 Resources 放一份，便于手动指定 JIEBA_DICT_DIR
+          mkdir -p "$RESOURCES/dict"
+          cp "$JIEBA_DIR"/*.utf8 "$RESOURCES/dict/"
+
+          # README 品牌化
+          cp docs/LITE.md "$RESOURCES/README.md" 2>/dev/null || true
+          if [ -f "$RESOURCES/README.md" ]; then
+            sed -i '' 's/WeKnora Lite/AI知识库/g; s/WeKnora-lite/AI知识库/g; s/WeKnora/AI知识库/g' "$RESOURCES/README.md"
+          fi
+
+          # 未签名 .app（无 Apple Developer 证书）。用户首次打开需右键→打开。
+          DMG_NAME="${APP}_${VER}_macos_universal"
+          DMG_SRC="dmg_staging"
+          mkdir -p "$DMG_SRC"
+          cp -R "$BIN/${APP_BUNDLE}" "$DMG_SRC/"
+          ln -s /Applications "$DMG_SRC/Applications"
+          hdiutil create -volname "$APP" -srcfolder "$DMG_SRC" -ov -format UDZO "${DMG_NAME}.dmg"
+          shasum -a 256 "${DMG_NAME}.dmg" > "${DMG_NAME}.dmg.sha256"
+          ls -lh "${DMG_NAME}.dmg"*
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: branding-desktop-macos-universal
+          path: |
+            ./${{ env.APP_NAME }}_*.dmg
+            ./${{ env.APP_NAME }}_*.sha256
+          retention-days: 7
+
+  # ─────────────────────────────────────────────────────────────
+  # Linux：amd64 绿色版 tar.gz
+  # 复用官方 release-lite.yml 的 linux/amd64 配方（webkit2_41 CGO tag）。
+  # ─────────────────────────────────────────────────────────────
+  build-linux:
+    name: Linux amd64 desktop
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Wails CLI
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
+
+      - name: Brand app name (runner-only, no repo changes)
+        shell: bash
+        run: |
+          APP="${{ env.APP_NAME }}"
+          for f in \
+            cmd/desktop/main.go \
+            cmd/desktop/main_bindings.go \
+            cmd/desktop/prefs.go \
+            cmd/desktop/signing_key.go \
+            cmd/desktop/update.go \
+            cmd/desktop/wails.json; do
+            sed -i "s/WeKnora Lite/${APP}/g" "$f"
+          done
+          grep '"name"' cmd/desktop/wails.json | head -1
+
+      - name: Build frontend
+        shell: bash
+        run: |
+          cd frontend
+          npm ci --prefer-offline
+          VITE_AppVersion="v$(tr -d '\n\r' < ../VERSION)" npm run build
+          cd ..
+          rm -rf web
+          cp -r frontend/dist web
+          grep -o '<title>[^<]*</title>' web/index.html
+
+      - name: Prepare sqlite3.h for sqlite-vec cgo
+        shell: bash
+        run: |
+          go mod download github.com/mattn/go-sqlite3
+          SQLITE_DIR="$(go list -m -f '{{.Dir}}' github.com/mattn/go-sqlite3)"
+          INC="$RUNNER_TEMP/weknora-cgo-include"
+          mkdir -p "$INC"
+          cp "$SQLITE_DIR/sqlite3-binding.h" "$INC/sqlite3.h"
+          cp "$SQLITE_DIR/sqlite3ext.h" "$INC/" 2>/dev/null || true
+          echo "CGO_CFLAGS=-Wno-deprecated-declarations -I$INC" >> "$GITHUB_ENV"
+          echo "sqlite3.h prepared at $INC"
+
+      - name: Build desktop app (Wails linux/amd64)
+        shell: bash
+        run: |
+          export EDITION="${{ env.EDITION }}"
+          export GOLANG_PROTOBUF_REGISTRATION_CONFLICT=warn
+          eval "$(./scripts/get_version.sh env)"
+          LDFLAGS="$(./scripts/get_version.sh ldflags) -X 'google.golang.org/protobuf/reflect/protoregistry.conflictPolicy=warn'"
+          bash ./scripts/check-license-bundle.sh
+          cd cmd/desktop
+          # Linux 需要 webkit2_41 CGO tag（webkit2gtk-4.1）
+          wails build -clean \
+            -skipbindings \
+            -s \
+            -m \
+            -tags "sqlite_fts5 webkit2_41" \
+            -platform linux/amd64 \
+            -ldflags="${LDFLAGS}" \
+            -o "${{ env.APP_NAME }}"
+
+      - name: Package Linux app into tar.gz
+        shell: bash
+        run: |
+          set -e
+          APP="${{ env.APP_NAME }}"
+          VER="$(tr -d '\n\r' < VERSION)"
+          BIN="cmd/desktop/build/bin"
+          EXE_SRC=""
+          for cand in "$BIN/${APP}" "$BIN/${APP}-amd64" "$BIN/${APP}_linux_amd64"; do
+            if [ -f "$cand" ]; then EXE_SRC="$cand"; break; fi
+          done
+          test -n "$EXE_SRC" || { echo "desktop binary not found in $BIN" >&2; ls -la "$BIN"; exit 1; }
+
+          GREEN="${APP}_${VER}_linux_amd64_portable"
+          mkdir -p "$GREEN/config" "$GREEN/migrations/sqlite" "$GREEN/dict" "$GREEN/web"
+          cp "$EXE_SRC" "$GREEN/${APP}"
+          chmod +x "$GREEN/${APP}"
+          cp .env.lite.example "$GREEN/.env"
+          sed -i 's/^DISABLE_REGISTRATION=.*/DISABLE_REGISTRATION=true/' "$GREEN/.env"
+          cp -r config/* "$GREEN/config/"
+          cp -r migrations/sqlite/* "$GREEN/migrations/sqlite/"
+          cp -r web/* "$GREEN/web/"
+          bash ./scripts/copy-licenses.sh "$GREEN" 2>/dev/null || true
+
+          # jieba 词典：可执行程序同目录 dict/
+          JIEBA_DIR="$(go list -m -f '{{.Dir}}' github.com/yanyiwu/gojieba)/deps/cppjieba/dict"
+          test -f "$JIEBA_DIR/jieba.dict.utf8" || { echo "jieba dict not found" >&2; exit 1; }
+          cp "$JIEBA_DIR"/*.utf8 "$GREEN/dict/"
+
+          cp docs/LITE.md "$GREEN/README.md" 2>/dev/null || true
+          if [ -f "$GREEN/README.md" ]; then
+            sed -i 's/WeKnora Lite/AI知识库/g; s/WeKnora-lite/AI知识库/g; s/WeKnora/AI知识库/g' "$GREEN/README.md"
+          fi
+
+          tar czf "${GREEN}.tar.gz" "$GREEN"
+          sha256sum "${GREEN}.tar.gz" > "${GREEN}.tar.gz.sha256"
+          ls -lh "${GREEN}.tar.gz"*
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: branding-desktop-linux-amd64
+          path: |
+            ./${{ env.APP_NAME }}_*.tar.gz
             ./${{ env.APP_NAME }}_*.sha256
           retention-days: 7
