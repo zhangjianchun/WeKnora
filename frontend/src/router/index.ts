@@ -372,6 +372,9 @@ router.beforeEach(async (to, from, next) => {
         } catch {
           // Auto-setup may be unavailable outside the native Lite shell.
         }
+        // 自动登录失败不永久锁定：登录页 onMounted / 后续导航会再尝试，
+        // 给 Wails 原生桥更多注入时间，避免首次打开误落到登录页。
+        autoSetupAttempted = false
       }
       next('/login')
       return

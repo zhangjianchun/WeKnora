@@ -161,6 +161,7 @@ jobs:
           test -f "$JIEBA_DIR/jieba.dict.utf8" || { echo "jieba dict not found at $JIEBA_DIR" >&2; exit 1; }
           cp "$JIEBA_DIR"/*.utf8 "$GREEN/dict/"
           # README 品牌化：WeKnora Lite/WeKnora-lite 统一替换为 AI知识库
+          cp docs/LITE.md "$GREEN/README.md" 2>/dev/null || true
           if [ -f "$GREEN/README.md" ]; then
             sed -i 's/WeKnora Lite/AI知识库/g; s/WeKnora-lite/AI知识库/g; s/WeKnora/AI知识库/g' "$GREEN/README.md"
           fi
