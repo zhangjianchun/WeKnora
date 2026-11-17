@@ -212,10 +212,10 @@ jobs:
   build-macos:
     name: macOS universal desktop
     if: ${{ inputs.target == 'all' || inputs.target == 'macos' }}
-    # macos-14 是官方 release-lite.yml 使用的 runner，历史上 universal 构建成功过。
+    # 官方配方用 macos-14；若该 label 被平台取消，可切换 macos-13(macOS Intel)。
     # 若某时段 GitHub 免费账户 macOS runner 排队/额度紧张，job 会长时间 queued 或秒取消，
     # 属平台资源问题，非构建配置问题；资源恢复后重跑此 job 即可。
-    runs-on: macos-14
+    runs-on: macos-13
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v6
