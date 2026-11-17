@@ -2,8 +2,10 @@ package types
 
 import (
 	"encoding/json"
+	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"time"
 
 	"github.com/yanyiwu/gojieba"
@@ -29,6 +31,11 @@ func newJieba() *gojieba.Jieba {
 		return gojieba.NewJieba()
 	}
 
+	// gojieba 底层 cppjieba 用 C++ std::ifstream（窄字符）打开词典；
+	// Windows 下路径含中文时 ifstream 按本地 ANSI 码页解读 UTF-8 字节而打开失败。
+	// 若词典路径含非 ASCII 字符，复制到 ASCII 目录再用，保证双击可用。
+	dictDir = asciiDictDir(dictDir)
+
 	return gojieba.NewJieba(
 		filepath.Join(dictDir, "jieba.dict.utf8"),
 		filepath.Join(dictDir, "hmm_model.utf8"),
@@ -36,6 +43,59 @@ func newJieba() *gojieba.Jieba {
 		filepath.Join(dictDir, "idf.utf8"),
 		filepath.Join(dictDir, "stop_words.utf8"),
 	)
+}
+
+// asciiDictDir 返回一个纯 ASCII 的词典目录。Windows 下若原路径含非 ASCII 字符，
+// 将词典文件复制到 %ProgramData%\weknora-jieba-dict（标准可写、路径全 ASCII）。
+// 其他平台或原本就是 ASCII 路径时直接返回原路径。
+func asciiDictDir(dictDir string) string {
+	if runtime.GOOS != "windows" || isASCII(dictDir) {
+		return dictDir
+	}
+
+	target := filepath.Join(os.Getenv("ProgramData"), "weknora-jieba-dict")
+	if target == "weknora-jieba-dict" { // ProgramData 未设置时兜底到临时目录
+		target = filepath.Join(os.TempDir(), "weknora-jieba-dict")
+	}
+	dicts := []string{"jieba.dict.utf8", "hmm_model.utf8", "user.dict.utf8", "idf.utf8", "stop_words.utf8"}
+	if err := os.MkdirAll(target, 0o755); err != nil {
+		return dictDir
+	}
+	for _, name := range dicts {
+		src := filepath.Join(dictDir, name)
+		dst := filepath.Join(target, name)
+		if _, err := os.Stat(dst); err == nil {
+			continue // 已存在则复用
+		}
+		if err := copyFile(src, dst); err != nil {
+			return dictDir // 复制失败则退回原路径（可能仍能工作）
+		}
+	}
+	return target
+}
+
+func isASCII(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] > 0x7f {
+			return false
+		}
+	}
+	return true
+}
+
+func copyFile(src, dst string) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+	out, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+	_, err = io.Copy(out, in)
+	return err
 }
 
 // EvaluationStatue represents the status of an evaluation task
