@@ -911,7 +911,7 @@ func (h *AuthHandler) AutoSetup(c *gin.Context) {
 		return
 	}
 
-	const defaultEmail = "admin@weknora.local"
+	const defaultEmail = "admin@aiknowledge.local"
 
 	user, _ := h.userService.GetUserByEmail(ctx, defaultEmail)
 	if user == nil {

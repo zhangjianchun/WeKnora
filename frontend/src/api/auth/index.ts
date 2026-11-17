@@ -307,7 +307,15 @@ export function autoSetup(): Promise<LoginResponse> {
 
   const request = (async () => {
     try {
-      const nativeApp = (window as any).go?.main?.App
+      // Wails 原生桥（window.go.main.App）在页面加载后由运行时异步注入。
+      // 首次全新启动时 localStorage 无 token、直接走 auto-setup，若此刻桥尚未
+      // 就绪就会误判为“非桌面环境”而跳到登录页。轮询等待桥就绪最多 ~5 秒。
+      let nativeApp: any = undefined
+      for (let i = 0; i < 50; i++) {
+        nativeApp = (window as any).go?.main?.App
+        if (nativeApp?.GetAutoSetupToken) break
+        await new Promise((resolve) => setTimeout(resolve, 100))
+      }
       if (!nativeApp?.GetAutoSetupToken) return { success: false, message: 'Desktop authentication required' }
       const token = await nativeApp.GetAutoSetupToken()
       const response = await post('/api/v1/auth/auto-setup', {}, {

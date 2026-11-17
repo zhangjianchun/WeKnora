@@ -149,6 +149,9 @@ jobs:
           cp "$EXE_SRC" "$GREEN/${APP}.exe"
           echo "exe source: $EXE_SRC -> $GREEN/${APP}.exe"
           cp .env.lite.example "$GREEN/.env"
+          # 桌面端"无需注册"：禁止自助注册（auto-setup 会自动创建默认用户并登录，
+          # 即使自动登录因故失败落到登录页，也不显示注册入口）
+          sed -i 's/^DISABLE_REGISTRATION=.*/DISABLE_REGISTRATION=true/' "$GREEN/.env"
           cp -r config/* "$GREEN/config/"
           cp -r migrations/sqlite/* "$GREEN/migrations/sqlite/"
           cp -r web "$GREEN/web"
@@ -157,7 +160,10 @@ jobs:
           JIEBA_DIR="$(go list -m -f '{{.Dir}}' github.com/yanyiwu/gojieba)/deps/cppjieba/dict"
           test -f "$JIEBA_DIR/jieba.dict.utf8" || { echo "jieba dict not found at $JIEBA_DIR" >&2; exit 1; }
           cp "$JIEBA_DIR"/*.utf8 "$GREEN/dict/"
-          cp docs/LITE.md "$GREEN/README.md" 2>/dev/null || true
+          # README 品牌化：WeKnora Lite/WeKnora-lite 统一替换为 AI知识库
+          if [ -f "$GREEN/README.md" ]; then
+            sed -i 's/WeKnora Lite/AI知识库/g; s/WeKnora-lite/AI知识库/g; s/WeKnora/AI知识库/g' "$GREEN/README.md"
+          fi
           bash ./scripts/copy-licenses.sh "$GREEN" 2>/dev/null || true
           (cd . && 7z a -tzip "${GREEN}.zip" "$GREEN" >/dev/null 2>&1 || powershell -Command "Compress-Archive -Path '$GREEN' -DestinationPath '${GREEN}.zip' -Force")
           sha256sum "${GREEN}.zip" > "${GREEN}.zip.sha256"
