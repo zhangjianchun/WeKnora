@@ -93,7 +93,15 @@ jobs:
           LDFLAGS="$(./scripts/get_version.sh ldflags) -X 'google.golang.org/protobuf/reflect/protoregistry.conflictPolicy=warn'"
           bash ./scripts/check-license-bundle.sh
           cd cmd/desktop
+          # -skipbindings: go.mod 升到 Go1.26 后，Wails v2.12 绑定生成器的 go/packages
+          #   类型加载会触发 sqlite3.h 缺失 / "package without types" 错误；绑定文件
+          #   (frontend/src/wailsjs) 已在仓库中，前端也已独立构建，故跳过。
+          # -s: 跳过 Wails 内部前端重建（前面 Build frontend 已完成）
+          # -m: 跳过 mod tidy（依赖已在 go.mod/go.sum，pre-compile 已验证可编译）
           wails build -clean \
+            -skipbindings \
+            -s \
+            -m \
             -tags "sqlite_fts5" \
             -platform windows/amd64 \
             -nsis \
