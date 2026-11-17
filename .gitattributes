@@ -5,6 +5,9 @@
 # acceptance/contract envelope tests.
 *.go text eol=lf
 cli/acceptance/testdata/**/*.json text eol=lf
+# License source manifest: checksum column must not carry a trailing CR on
+# Windows checkouts, otherwise check-license-bundle.sh regex validation fails.
+licenses/sources/*.tsv text eol=lf
 
 # Trellis: append-only developer journals should merge cleanly across
 # parallel sessions/worktrees — each session only appends a new block, so
