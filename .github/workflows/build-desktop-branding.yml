@@ -12,7 +12,8 @@ on:
 
 concurrency:
   group: build-desktop-branding-${{ github.ref }}
-  cancel-in-progress: true
+  # 三平台 job 并行且耗时较长，不自动取消，避免偶发的同 ref 并发误伤（macOS job 曾被秒取消）
+  cancel-in-progress: false
 
 permissions:
   contents: read
