@@ -1,0 +1,143 @@
+name: Build Branded Desktop (Windows)
+
+# 手动触发：在 branding 分支打「AI知识库」桌面客户端（绿色版 exe + NSIS 安装包）。
+# 复用官方 release-lite.yml 的 Windows 桌面构建配方（Go 1.24 + Wails + NSIS），
+# 只在 CI runner 上临时改应用名，不改动仓库源码。
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: build-desktop-branding-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  GO_VERSION: "1.24"
+  NODE_VERSION: "22"
+  APP_NAME: "AI知识库"
+  EDITION: lite
+  CGO_ENABLED: "1"
+
+jobs:
+  build-windows:
+    name: Windows amd64 desktop
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Wails CLI
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+      - name: Install NSIS
+        run: choco install nsis -y
+
+      - name: Brand app name (runner-only, no repo changes)
+        shell: bash
+        run: |
+          APP="${{ env.APP_NAME }}"
+          for f in \
+            cmd/desktop/main.go \
+            cmd/desktop/main_bindings.go \
+            cmd/desktop/prefs.go \
+            cmd/desktop/signing_key.go \
+            cmd/desktop/update.go \
+            cmd/desktop/wails.json; do
+            sed -i "s/WeKnora Lite/${APP}/g" "$f"
+          done
+          echo "--- wails.json name ---"
+          grep '"name"' cmd/desktop/wails.json | head -1
+
+      - name: Build frontend
+        shell: bash
+        run: |
+          cd frontend
+          npm ci --prefer-offline
+          VITE_AppVersion="v$(tr -d '\n\r' < ../VERSION)" npm run build
+          cd ..
+          rm -rf web
+          cp -r frontend/dist web
+          grep -o '<title>[^<]*</title>' web/index.html
+
+      - name: Pre-compile Go packages (warm cache)
+        shell: bash
+        run: |
+          export GOLANG_PROTOBUF_REGISTRATION_CONFLICT=warn
+          export CGO_CFLAGS="-Wno-deprecated-declarations"
+          cd cmd/desktop
+          go build -p 1 -buildvcs=false -tags "desktop,sqlite_fts5,production" -o _prebuild_tmp.exe . || true
+          rm -f _prebuild_tmp.exe
+
+      - name: Build desktop app (Wails + NSIS)
+        shell: bash
+        run: |
+          export EDITION="${{ env.EDITION }}"
+          export GOLANG_PROTOBUF_REGISTRATION_CONFLICT=warn
+          export CGO_CFLAGS="-Wno-deprecated-declarations"
+          eval "$(./scripts/get_version.sh env)"
+          LDFLAGS="$(./scripts/get_version.sh ldflags) -X 'google.golang.org/protobuf/reflect/protoregistry.conflictPolicy=warn'"
+          bash ./scripts/check-license-bundle.sh
+          cd cmd/desktop
+          wails build -clean \
+            -tags "sqlite_fts5" \
+            -platform windows/amd64 \
+            -nsis \
+            -ldflags="${LDFLAGS}" \
+            -o "${{ env.APP_NAME }}"
+
+      - name: Assemble artifacts
+        shell: bash
+        run: |
+          APP="${{ env.APP_NAME }}"
+          VER="$(tr -d '\n\r' < VERSION)"
+          BIN="cmd/desktop/build/bin"
+
+          echo "--- built files ---"
+          ls -la "$BIN"
+
+          # 绿色版目录：exe + 资源（config/.env/migrations/web/licenses）
+          GREEN="${APP}_${VER}_windows_amd64_portable"
+          mkdir -p "$GREEN/config" "$GREEN/migrations/sqlite"
+          cp "$BIN/${APP}.exe" "$GREEN/" 2>/dev/null || cp "$BIN/${APP}-amd64.exe" "$GREEN/"
+          cp .env.lite.example "$GREEN/.env"
+          cp -r config/* "$GREEN/config/"
+          cp -r migrations/sqlite/* "$GREEN/migrations/sqlite/"
+          cp -r web "$GREEN/web"
+          cp docs/LITE.md "$GREEN/README.md" 2>/dev/null || true
+          bash ./scripts/copy-licenses.sh "$GREEN" 2>/dev/null || true
+          (cd . && 7z a -tzip "${GREEN}.zip" "$GREEN" >/dev/null 2>&1 || powershell -Command "Compress-Archive -Path '$GREEN' -DestinationPath '${GREEN}.zip' -Force")
+          sha256sum "${GREEN}.zip" > "${GREEN}.zip.sha256"
+
+          # NSIS 安装包
+          INSTALLER=$(find "$BIN" -iname "*-installer.exe" | head -1)
+          if [ -n "$INSTALLER" ]; then
+            SETUP="${APP}_${VER}_windows_amd64_setup.exe"
+            cp "$INSTALLER" "$SETUP"
+            sha256sum "$SETUP" > "$SETUP.sha256"
+          fi
+
+          echo "--- artifacts ---"
+          ls -lh ./*.zip ./*.exe ./*.sha256 2>/dev/null || true
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: branding-desktop-windows-amd64
+          path: |
+            ./${{ env.APP_NAME }}_*.zip
+            ./${{ env.APP_NAME }}_*.exe
+            ./${{ env.APP_NAME }}_*.sha256
+          retention-days: 7

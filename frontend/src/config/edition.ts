@@ -161,7 +161,7 @@ const FEATURE_MATRIX: Record<FeatureKey, Record<Edition, boolean>> = {
 
   // 0.9.0 智能体页「用助手创建」：独立开关，默认隐藏；同时登记在 ASSISTANT_DEPENDENT_KEYS，
   // 助手总开关关闭时必然隐藏。想放开只需把这一行改回 true（且 nav.assistant 为 true）。
-  'agent.createWithAssistant': { lite: false, pro: false, enterprise: false },
+  'agent.createWithAssistant': { lite: true, pro: true, enterprise: true },
 
   // ═══════════════ 0.9.0 助手之上的能力（受助手总开关约束）═══════════════
   'assistant.collaboration': { lite: true,  pro: true,  enterprise: true  },  // 多智能体协作
