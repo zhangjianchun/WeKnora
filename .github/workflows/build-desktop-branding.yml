@@ -41,7 +41,8 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install Wails CLI
-        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+        # 钉死到 go.mod 使用的 v2.12.0：@latest 已到 v2.17.1，要求 Go>=1.26，与本项目 Go 1.24 冲突
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
 
       - name: Install NSIS
         run: choco install nsis -y
