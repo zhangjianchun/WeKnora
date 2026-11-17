@@ -307,17 +307,27 @@ export function autoSetup(): Promise<LoginResponse> {
 
   const request = (async () => {
     try {
-      // Wails 原生桥（window.go.main.App）在页面加载后由运行时异步注入。
-      // 首次全新启动时 localStorage 无 token、直接走 auto-setup，若此刻桥尚未
-      // 就绪就会误判为“非桌面环境”而跳到登录页。轮询等待桥就绪最多 ~5 秒。
-      let nativeApp: any = undefined
-      for (let i = 0; i < 50; i++) {
-        nativeApp = (window as any).go?.main?.App
-        if (nativeApp?.GetAutoSetupToken) break
-        await new Promise((resolve) => setTimeout(resolve, 100))
+      // 首选：Go 侧在 OnDomReady 时同步注入的一次性 token（不依赖 Wails 原生桥
+      // 的异步注入时序）。这解决了首次冷启动时 window.go 尚未就绪、前端误判为
+      // “非桌面环境”而落到登录页的问题。
+      let token: string | undefined = (window as any).__WEKNORA_SETUP_TOKEN__
+
+      // Fallback：token 变量尚未注入（或老版本运行时）时，轮询等待。
+      // 每次同时检查注入变量与原生桥，无论哪个先就绪都能立即拿到 token（最多 ~5 秒）。
+      if (!token) {
+        for (let i = 0; i < 50; i++) {
+          token = (window as any).__WEKNORA_SETUP_TOKEN__
+          if (token) break
+          const nativeApp = (window as any).go?.main?.App
+          if (nativeApp?.GetAutoSetupToken) {
+            token = await nativeApp.GetAutoSetupToken()
+            if (token) break
+          }
+          await new Promise((resolve) => setTimeout(resolve, 100))
+        }
       }
-      if (!nativeApp?.GetAutoSetupToken) return { success: false, message: 'Desktop authentication required' }
-      const token = await nativeApp.GetAutoSetupToken()
+
+      if (!token) return { success: false, message: 'Desktop authentication required' }
       const response = await post('/api/v1/auth/auto-setup', {}, {
         headers: { 'X-WeKnora-Desktop-Token': token },
       })
