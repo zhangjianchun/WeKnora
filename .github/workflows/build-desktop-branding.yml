@@ -136,9 +136,9 @@ jobs:
           echo "--- built files ---"
           ls -la "$BIN"
 
-          # 绿色版目录：exe + 资源（config/.env/migrations/web/licenses）
+          # 绿色版目录：exe + 资源（config/.env/migrations/web/licenses/dict）
           GREEN="${APP}_${VER}_windows_amd64_portable"
-          mkdir -p "$GREEN/config" "$GREEN/migrations/sqlite"
+          mkdir -p "$GREEN/config" "$GREEN/migrations/sqlite" "$GREEN/dict"
           # wails -o 在 Windows 产出的文件名可能是 "AI知识库"、"AI知识库.exe"、
           # "AI知识库-amd64.exe" 之一（本次实测为无后缀的 "AI知识库"）。统一复制并重命名为 .exe。
           EXE_SRC=""
@@ -152,6 +152,11 @@ jobs:
           cp -r config/* "$GREEN/config/"
           cp -r migrations/sqlite/* "$GREEN/migrations/sqlite/"
           cp -r web "$GREEN/web"
+          # jieba 词典：newJieba() 会优先读 exe 同目录的 dict/，避免 gojieba
+          # 编译期固化的构建机源码路径在用户机器上不存在导致启动 panic
+          JIEBA_DIR="$(go list -m -f '{{.Dir}}' github.com/yanyiwu/gojieba)/deps/cppjieba/dict"
+          test -f "$JIEBA_DIR/jieba.dict.utf8" || { echo "jieba dict not found at $JIEBA_DIR" >&2; exit 1; }
+          cp "$JIEBA_DIR"/*.utf8 "$GREEN/dict/"
           cp docs/LITE.md "$GREEN/README.md" 2>/dev/null || true
           bash ./scripts/copy-licenses.sh "$GREEN" 2>/dev/null || true
           (cd . && 7z a -tzip "${GREEN}.zip" "$GREEN" >/dev/null 2>&1 || powershell -Command "Compress-Archive -Path '$GREEN' -DestinationPath '${GREEN}.zip' -Force")

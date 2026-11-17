@@ -15,6 +15,17 @@ var Jieba *gojieba.Jieba = newJieba()
 func newJieba() *gojieba.Jieba {
 	dictDir := os.Getenv("JIEBA_DICT_DIR")
 	if dictDir == "" {
+		// gojieba 的 NewJieba() 无参版用 runtime.Caller 定位词典，路径在编译期
+		// 固化为构建机源码目录，绿色版分发到用户机器后不存在会 panic。
+		// 若可执行文件同目录随包附带了 dict/，优先使用它（双击即用）。
+		if exe, err := os.Executable(); err == nil {
+			candidate := filepath.Join(filepath.Dir(exe), "dict")
+			if info, statErr := os.Stat(filepath.Join(candidate, "jieba.dict.utf8")); statErr == nil && !info.IsDir() {
+				dictDir = candidate
+			}
+		}
+	}
+	if dictDir == "" {
 		return gojieba.NewJieba()
 	}
 
