@@ -982,6 +982,55 @@ func initRedisClient() (*redis.Client, error) {
 	return client, nil
 }
 
+// migrateLegacySQLiteDB migrates a database created by older builds under the
+// weknora.db filename to the rebranded aiknowledge.db filename. It is a no-op
+// when the target database already exists, when no legacy database is present,
+// or when the configured path is not the default aiknowledge.db name (so custom
+// DB_PATH values are left untouched). The main .db file and its SQLite -wal
+// companion are copied (the -shm file is disposable and rebuilt on open); the
+// legacy files are kept in place as a backup.
+func migrateLegacySQLiteDB(dbPath string) {
+	const (
+		legacyName = "weknora.db"
+		targetName = "aiknowledge.db"
+	)
+
+	dir := filepath.Dir(dbPath)
+	if filepath.Base(dbPath) != targetName {
+		return
+	}
+
+	legacyPath := filepath.Join(dir, legacyName)
+	legacyInfo, err := os.Stat(legacyPath)
+	if err != nil || legacyInfo.IsDir() {
+		return
+	}
+	if info, err := os.Stat(dbPath); err == nil && !info.IsDir() {
+		return
+	}
+
+	for _, suffix := range []string{"", "-wal"} {
+		src := legacyPath + suffix
+		dst := dbPath + suffix
+		if _, err := os.Stat(src); err != nil {
+			continue
+		}
+		if _, err := os.Stat(dst); err == nil {
+			continue
+		}
+		data, err := os.ReadFile(src)
+		if err != nil {
+			logger.Warnf(context.Background(), "Failed to read legacy SQLite file %s: %v", src, err)
+			continue
+		}
+		if err := os.WriteFile(dst, data, 0o600); err != nil {
+			logger.Warnf(context.Background(), "Failed to migrate legacy SQLite file to %s: %v", dst, err)
+			continue
+		}
+		logger.Infof(context.Background(), "Migrated legacy SQLite file %s -> %s", src, dst)
+	}
+}
+
 // initDatabase initializes database connection
 // Creates and configures database connection based on environment configuration
 // Supports multiple database backends (PostgreSQL)
@@ -1042,8 +1091,14 @@ func initDatabase(cfg *config.Config) (*gorm.DB, error) {
 	case "sqlite":
 		dbPath := os.Getenv("DB_PATH")
 		if dbPath == "" {
-			dbPath = "./data/weknora.db"
+			dbPath = "./data/aiknowledge.db"
 		}
+		// Backward compatibility: builds before the rebrand stored the SQLite
+		// database as weknora.db. If the configured/new path has no database
+		// yet but the legacy weknora.db exists beside it, migrate the legacy
+		// files so existing users keep their data. Docker/postgres never reaches
+		// this branch, so this is safe for the standard Docker deployment.
+		migrateLegacySQLiteDB(dbPath)
 		if dir := filepath.Dir(dbPath); dir != "." && dir != "" {
 			if err := os.MkdirAll(dir, 0o755); err != nil {
 				return nil, fmt.Errorf("failed to create SQLite data directory %s: %w", dir, err)

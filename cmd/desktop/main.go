@@ -418,7 +418,7 @@ func configureDesktopStorage(execPath string) {
 	targetDataDir := filepath.Join(appSupportDir, "data")
 	migrateLegacyDesktopData(legacyResourcesDir, targetDataDir)
 
-	dbPath := resolveDesktopDataPath(os.Getenv("DB_PATH"), filepath.Join("data", "weknora.db"), appSupportDir)
+	dbPath := resolveDesktopDataPath(os.Getenv("DB_PATH"), filepath.Join("data", "aiknowledge.db"), appSupportDir)
 
 	if err := os.MkdirAll(filepath.Dir(dbPath), 0o755); err != nil {
 		logger.Warnf(context.Background(), "Failed to create desktop DB directory %s: %v", filepath.Dir(dbPath), err)
