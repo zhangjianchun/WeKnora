@@ -80,7 +80,11 @@ jobs:
       - name: Prepare sqlite3.h for sqlite-vec cgo
         shell: bash
         run: |
+          # 该模块是 indirect 依赖，可能尚未下载，先显式拉取，否则 go list -m 的 .Dir 为空
+          go mod download github.com/mattn/go-sqlite3
           SQLITE_DIR="$(go list -m -f '{{.Dir}}' github.com/mattn/go-sqlite3)"
+          echo "SQLITE_DIR=$SQLITE_DIR"
+          test -f "$SQLITE_DIR/sqlite3-binding.h"
           INC="$RUNNER_TEMP/weknora-cgo-include"
           mkdir -p "$INC"
           cp "$SQLITE_DIR/sqlite3-binding.h" "$INC/sqlite3.h"
