@@ -74,11 +74,26 @@ jobs:
           cp -r frontend/dist web
           grep -o '<title>[^<]*</title>' web/index.html
 
+      # sqlite-vec-go-bindings 的 cgo 在 SQLITE_CORE 下 #include "sqlite3.h"，
+      # 但模块缓存里只有 mattn/go-sqlite3 的 sqlite3-binding.h。复制一份改名，
+      # 并把目录加入 CGO_CFLAGS 的 -I，否则编译报 sqlite3.h: No such file。
+      - name: Prepare sqlite3.h for sqlite-vec cgo
+        shell: bash
+        run: |
+          SQLITE_DIR="$(go list -m -f '{{.Dir}}' github.com/mattn/go-sqlite3)"
+          INC="$RUNNER_TEMP/weknora-cgo-include"
+          mkdir -p "$INC"
+          cp "$SQLITE_DIR/sqlite3-binding.h" "$INC/sqlite3.h"
+          cp "$SQLITE_DIR/sqlite3ext.h" "$INC/" 2>/dev/null || true
+          # Windows 下 gcc 需要盘符绝对路径；反斜杠转正斜杠
+          INC_WIN="$(echo "$INC" | sed 's#\\#/#g')"
+          echo "CGO_CFLAGS=-Wno-deprecated-declarations -I$INC_WIN" >> "$GITHUB_ENV"
+          echo "sqlite3.h prepared at $INC"
+
       - name: Pre-compile Go packages (warm cache)
         shell: bash
         run: |
           export GOLANG_PROTOBUF_REGISTRATION_CONFLICT=warn
-          export CGO_CFLAGS="-Wno-deprecated-declarations"
           cd cmd/desktop
           go build -p 1 -buildvcs=false -tags "desktop,sqlite_fts5,production" -o _prebuild_tmp.exe . || true
           rm -f _prebuild_tmp.exe
@@ -88,7 +103,6 @@ jobs:
         run: |
           export EDITION="${{ env.EDITION }}"
           export GOLANG_PROTOBUF_REGISTRATION_CONFLICT=warn
-          export CGO_CFLAGS="-Wno-deprecated-declarations"
           eval "$(./scripts/get_version.sh env)"
           LDFLAGS="$(./scripts/get_version.sh ldflags) -X 'google.golang.org/protobuf/reflect/protoregistry.conflictPolicy=warn'"
           bash ./scripts/check-license-bundle.sh
