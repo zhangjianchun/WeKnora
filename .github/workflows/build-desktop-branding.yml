@@ -139,7 +139,15 @@ jobs:
           # 绿色版目录：exe + 资源（config/.env/migrations/web/licenses）
           GREEN="${APP}_${VER}_windows_amd64_portable"
           mkdir -p "$GREEN/config" "$GREEN/migrations/sqlite"
-          cp "$BIN/${APP}.exe" "$GREEN/" 2>/dev/null || cp "$BIN/${APP}-amd64.exe" "$GREEN/"
+          # wails -o 在 Windows 产出的文件名可能是 "AI知识库"、"AI知识库.exe"、
+          # "AI知识库-amd64.exe" 之一（本次实测为无后缀的 "AI知识库"）。统一复制并重命名为 .exe。
+          EXE_SRC=""
+          for cand in "$BIN/${APP}.exe" "$BIN/${APP}-amd64.exe" "$BIN/${APP}"; do
+            if [ -f "$cand" ]; then EXE_SRC="$cand"; break; fi
+          done
+          test -n "$EXE_SRC" || { echo "desktop exe not found in $BIN" >&2; exit 1; }
+          cp "$EXE_SRC" "$GREEN/${APP}.exe"
+          echo "exe source: $EXE_SRC -> $GREEN/${APP}.exe"
           cp .env.lite.example "$GREEN/.env"
           cp -r config/* "$GREEN/config/"
           cp -r migrations/sqlite/* "$GREEN/migrations/sqlite/"
