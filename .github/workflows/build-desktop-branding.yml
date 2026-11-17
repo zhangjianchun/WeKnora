@@ -6,11 +6,6 @@ name: Build Branded Desktop (Windows)
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - branding
-    paths:
-      - .github/workflows/build-desktop-branding.yml
 
 concurrency:
   group: build-desktop-branding-${{ github.ref }}
