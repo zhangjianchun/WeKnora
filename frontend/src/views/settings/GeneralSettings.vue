@@ -123,18 +123,7 @@
         </div>
       </div>
 
-      <!-- 自动下载更新开关 (Lite edition only) -->
-      <div class="setting-row" v-if="authStore.isLiteMode">
-        <div class="setting-info">
-          <label>{{ $t('settings.autoCheckUpdate') }}</label>
-          <p class="desc">{{ $t('settings.autoCheckUpdateDesc') }}</p>
-        </div>
-        <div class="setting-control">
-          <t-switch
-            v-model="isAutoCheckUpdateEnabled"
-          />
-        </div>
-      </div>
+      <!-- 自动下载更新开关已移除：品牌版禁用自动更新，上游包会覆盖品牌化改动 -->
     </div>
   </div>
 </template>
@@ -143,8 +132,6 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { MessagePlugin } from 'tdesign-vue-next'
 import { useI18n } from 'vue-i18n'
-import { useSettingsStore } from '@/stores/settings'
-import { useAuthStore } from '@/stores/auth'
 import { useTheme, type ThemeMode } from '@/composables/useTheme'
 import {
   useFont,
@@ -158,8 +145,6 @@ import {
 } from '@/composables/useFont'
 
 const { t, locale } = useI18n()
-const settingsStore = useSettingsStore()
-const authStore = useAuthStore()
 const { currentTheme, setTheme } = useTheme()
 const {
   currentSans,
@@ -204,21 +189,6 @@ const monoFontOptions = computed<{ value: MonoFontKey; label: string; preview: s
 // commits the choice to the global store and writes the CSS variable.
 const currentSansStack = computed(() => SANS_STACKS[localSansFont.value] ?? SANS_STACKS.system)
 const currentMonoStack = computed(() => MONO_STACKS[localMonoFont.value] ?? MONO_STACKS.system)
-
-// 自动检查更新状态
-const isAutoCheckUpdateEnabled = computed({
-  get: () => settingsStore.isAutoCheckUpdateEnabled,
-  set: (val) => {
-    settingsStore.toggleAutoCheckUpdate(val)
-    if (val) {
-      // @ts-ignore
-      if (window.go && window.go.main && window.go.main.App && window.go.main.App.AutoCheckForUpdates) {
-        // @ts-ignore
-        window.go.main.App.AutoCheckForUpdates()
-      }
-    }
-  }
-})
 
 // 初始化加载
 onMounted(() => {

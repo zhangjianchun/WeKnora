@@ -7,7 +7,6 @@ import ProtectedResourcePreview from '@/components/ProtectedResourcePreview.vue'
 import ManualKnowledgeEditor from '@/components/manual-knowledge-editor.vue'
 import UploadConfirmHost from '@/components/UploadConfirmHost.vue'
 import { useAuthStore } from '@/stores/auth'
-import { useSettingsStore } from '@/stores/settings'
 import { getCurrentUser, userInfoFromApi } from '@/api/auth'
 import { consumePendingTenantSwitchToast } from '@/utils/tenantSwitch'
 import { useRoleLabel } from '@/composables/useRoleLabel'
@@ -26,7 +25,6 @@ const { locale, t, tm } = useI18n()
 const { formatRole, roleIcon } = useRoleLabel()
 const router = useRouter()
 const authStore = useAuthStore()
-const settingsStore = useSettingsStore()
 
 const tdLocaleMap: Record<string, object> = {
   'en-US': enUSConfig,
@@ -173,8 +171,6 @@ const handleGlobalOIDCCallback = async () => {
   }
 }
 
-let updateCheckTimer: ReturnType<typeof setInterval> | null = null
-
 // Pending invitations poll: fires once on mount (logged-in case) and
 // then every 2 minutes. Light enough to keep the avatar-row badge
 // near-live without slamming the API, and avoids the cost of a
@@ -243,34 +239,11 @@ const showPendingTenantSwitchToast = () => {
 onMounted(() => {
   handleGlobalOIDCCallback()
   showPendingTenantSwitchToast()
-
-  // Auto check for updates on startup
-  setTimeout(() => {
-    if (settingsStore.isAutoCheckUpdateEnabled) {
-      // @ts-ignore
-      if (window.go && window.go.main && window.go.main.App && window.go.main.App.AutoCheckForUpdates) {
-        // @ts-ignore
-        window.go.main.App.AutoCheckForUpdates()
-      }
-    }
-  }, 2000)
-
-  // Periodically check for updates (every 4 hours)
-  updateCheckTimer = setInterval(() => {
-    if (settingsStore.isAutoCheckUpdateEnabled) {
-      // @ts-ignore
-      if (window.go && window.go.main && window.go.main.App && window.go.main.App.AutoCheckForUpdates) {
-        // @ts-ignore
-        window.go.main.App.AutoCheckForUpdates()
-      }
-    }
-  }, 4 * 60 * 60 * 1000)
+  // Auto-update checks are disabled in branded builds: the upstream release
+  // would overwrite the rebranded app. No timer is scheduled.
 })
 
 onUnmounted(() => {
-  if (updateCheckTimer) {
-    clearInterval(updateCheckTimer)
-  }
   stopInvitationPolling()
 })
 
