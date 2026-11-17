@@ -199,7 +199,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────
   build-macos:
     name: macOS universal desktop
-    runs-on: macos-14
+    runs-on: macos-latest
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v6
